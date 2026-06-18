@@ -1,0 +1,22 @@
+{
+  "port": 3030,
+  "public": "./public",
+  "paginate": {
+    "default": 20,
+    "max": 200
+  },
+  "mongodb": "mongodb://localhost:27017/apm-campaign",
+  "authentication": {
+    "secret": "change-this-to-a-random-secret-in-production",
+    "entity": "user",
+    "service": "/apm/users",
+    "authStrategies": ["jwt", "local"],
+    "local": {
+      "usernameField": "email",
+      "passwordField": "password"
+    },
+    "jwtOptions": {
+      "expiresIn": "1d"
+    }
+  }
+}

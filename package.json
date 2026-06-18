@@ -1,0 +1,38 @@
+{
+  "name": "apm-campaign-backend",
+  "version": "0.1.0",
+  "description": "APM Campaign Digital Command System — FeathersJS v5 Backend",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node src/index.js",
+    "build": "tsc",
+    "test": "vitest run",
+    "seed": "tsx src/seed/seed.ts",
+    "generate-services": "tsx src/generate-services.ts"
+  },
+  "dependencies": {
+    "@feathersjs/authentication": "^5.0.45",
+    "@feathersjs/authentication-local": "^5.0.45",
+    "@feathersjs/configuration": "^5.0.45",
+    "@feathersjs/errors": "^5.0.45",
+    "@feathersjs/feathers": "^5.0.45",
+    "@feathersjs/koa": "^5.0.45",
+    "@feathersjs/mongodb": "^5.0.45",
+    "@feathersjs/schema": "^5.0.45",
+    "@feathersjs/socketio": "^5.0.45",
+    "@feathersjs/transport-commons": "^5.0.45",
+    "@sinclair/typebox": "^0.34.49",
+    "mongodb": "^6.19.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/supertest": "^7.2.0",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
