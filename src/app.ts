@@ -7,6 +7,8 @@ import { configureAuthentication } from './authentication.js';
 import { configureChannels } from './channels.js';
 import { registerServices } from './services/index.js';
 import { registerHooks } from './hooks/register-hooks.js';
+import * as dotenv from 'dotenv';
+dotenv.config(); 
 
 export type { Application } from '@feathersjs/feathers';
 
