@@ -2,6 +2,9 @@
 
 Base URL: `http://localhost:3030/apm`
 
+Interactive API documentation (Swagger UI): [`http://localhost:3030/docs`](http://localhost:3030/docs)  
+OpenAPI JSON spec: [`http://localhost:3030/swagger.json`](http://localhost:3030/swagger.json)
+
 All endpoints require `Authorization: Bearer <token>` unless marked as public read.
 
 ---

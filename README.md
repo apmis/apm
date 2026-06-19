@@ -45,6 +45,15 @@ Uses `MongoMemoryReplSet` — no external MongoDB required. 189 integration test
 npm run seed
 ```
 
+## API Documentation (Swagger)
+
+Once the server is running, the OpenAPI spec is available at:
+
+- **Swagger UI**: [`http://localhost:3030/docs`](http://localhost:3030/docs)
+- **OpenAPI JSON**: [`http://localhost:3030/swagger.json`](http://localhost:3030/swagger.json)
+
+The Swagger UI provides interactive API documentation for all 49 services, including request/response schemas and authentication requirements.
+
 ---
 
 ## Frontend Integration Guide

@@ -60,16 +60,89 @@ const CUSTOM_CANVASSING_METHODS = [...STANDARD_METHODS, 'getSummary', 'getLgaSta
 
 type SchemaGroup = { result: TSchema; data: TSchema; patch: TSchema; query: TSchema };
 
+function generateExample(schema: any, depth = 0): any {
+  if (depth > 4 || !schema) return null;
+  if (schema.example !== undefined) return schema.example;
+  if (schema.enum?.length) return schema.enum[0];
+  if (schema.const !== undefined) return schema.const;
+  if (schema.default !== undefined) return schema.default;
+
+  if (schema.anyOf?.length) {
+    for (const variant of schema.anyOf) {
+      const v = generateExample(variant, depth + 1);
+      if (v !== null) return v;
+    }
+    return null;
+  }
+  if (schema.oneOf?.length) {
+    for (const variant of schema.oneOf) {
+      const v = generateExample(variant, depth + 1);
+      if (v !== null) return v;
+    }
+    return null;
+  }
+  if (schema.allOf?.length) {
+    const merged: any = {};
+    for (const sub of schema.allOf) {
+      const v = generateExample(sub, depth + 1);
+      if (typeof v === 'object' && v !== null) Object.assign(merged, v);
+    }
+    return Object.keys(merged).length ? merged : null;
+  }
+  if (schema.$ref) return null;
+  if (schema.type === 'string') {
+    if (schema.format === 'date-time') return '2026-03-18T10:30:00.000Z';
+    if (schema.format === 'email') return 'user@example.com';
+    if (schema.format === 'uri') return 'https://example.com/file.pdf';
+    if (schema.format === 'uuid') return '550e8400-e29b-41d4-a716-446655440000';
+    if (schema.pattern === '^[a-fA-F0-9]{24}$') return '507f1f77bcf86cd799439011';
+    return schema.minLength && schema.minLength > 0 ? 'a'.repeat(schema.minLength) : 'example';
+  }
+  if (schema.type === 'integer') return 0;
+  if (schema.type === 'number') return 0.0;
+  if (schema.type === 'boolean') return false;
+  if (schema.type === 'array') {
+    if (!schema.items) return [];
+    const item = generateExample(schema.items, depth + 1);
+    return item !== null ? [item] : [];
+  }
+  if (schema.type === 'object' && schema.properties) {
+    const result: any = {};
+    for (const [key, prop] of Object.entries(schema.properties)) {
+      result[key] = generateExample(prop as any, depth + 1);
+    }
+    return result;
+  }
+  return null;
+}
+
+function addExamples(schema: any): any {
+  if (!schema || schema.example) return schema;
+  const example = generateExample(schema);
+  if (example !== null) {
+    return { ...schema, example };
+  }
+  return schema;
+}
+
+function toTag(name: string): string {
+  return name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 function swaggerDocs(name: string, s: SchemaGroup, description: string) {
-  return createSwaggerServiceOptions({
+  const opts = createSwaggerServiceOptions({
     schemas: {
       [`${name}Schema`]: s.result,
       [`${name}DataSchema`]: s.data,
       [`${name}PatchSchema`]: s.patch,
       [`${name}QuerySchema`]: s.query,
     },
-    docs: { description, securities: ['find', 'get', 'create', 'patch', 'remove'] },
+    docs: { description, tag: toTag(name), securities: ['find', 'get', 'create', 'patch', 'remove'] },
   });
+  for (const key of Object.keys(opts.schemas)) {
+    opts.schemas[key] = addExamples(opts.schemas[key]);
+  }
+  return opts;
 }
 
 export function registerServices(app: Application) {
