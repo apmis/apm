@@ -63,7 +63,7 @@ type SchemaGroup = { result: TSchema; data: TSchema; patch: TSchema; query: TSch
 function swaggerDocs(name: string, s: SchemaGroup, description: string) {
   return createSwaggerServiceOptions({
     schemas: {
-      [`${name}ResultSchema`]: s.result,
+      [`${name}Schema`]: s.result,
       [`${name}DataSchema`]: s.data,
       [`${name}PatchSchema`]: s.patch,
       [`${name}QuerySchema`]: s.query,
