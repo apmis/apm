@@ -1,5 +1,5 @@
 import { feathers } from '@feathersjs/feathers';
-import { koa, rest, bodyParser, errorHandler, serveStatic } from '@feathersjs/koa';
+import { koa, rest, bodyParser, errorHandler, serveStatic, cors } from '@feathersjs/koa';
 import socketio from '@feathersjs/socketio';
 import configuration from '@feathersjs/configuration';
 import swaggerModule from 'feathers-swagger';
@@ -17,6 +17,19 @@ export type { Application } from '@feathersjs/feathers';
 
 export async function createApp(overrides?: Record<string, unknown>) {
   const app = koa(feathers());
+
+  const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com'];
+  const corsOptions = {
+    origin: (ctx: any) => {
+      const requestOrigin = ctx.get('Origin');
+      return allowedOrigins.includes(requestOrigin) ? requestOrigin : undefined;
+    },
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true, // Required if your app uses cookies or JWT in headers
+    allowHeaders: ['Content-Type', 'Authorization']
+  };
+
+  app.use(cors(corsOptions));
 
   app.configure(configuration());
   if (overrides) {
@@ -39,6 +52,7 @@ export async function createApp(overrides?: Record<string, unknown>) {
     },
     ui: swagger.swaggerUI({ docsPath: '/docs' }),
   }));
+
 
   app.configure(rest());
   app.configure(socketio());

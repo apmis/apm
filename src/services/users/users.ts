@@ -17,6 +17,11 @@ export const UsersResultSchema = Type.Object({
   accountStatus: Type.Union([Type.Literal('invited'), Type.Literal('active'), Type.Literal('suspended'), Type.Literal('disabled'), Type.Literal('locked')]),
   isPhoneVerified: Type.Boolean(),
   isEmailVerified: Type.Boolean(),
+  totpSecret: Type.Optional(Type.String()),
+  totpEnabled: Type.Optional(Type.Boolean()),
+  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('none')])),
+  emailOtpCode: Type.Optional(Type.String()),
+  emailOtpExpiry: Type.Optional(Type.String()),
 }, { additionalProperties: false });
 
 export const UsersDataSchema = Type.Object({
@@ -29,6 +34,11 @@ export const UsersDataSchema = Type.Object({
   accountStatus: Type.Optional(Type.Union([Type.Literal('invited'), Type.Literal('active'), Type.Literal('suspended'), Type.Literal('disabled'), Type.Literal('locked')])),
   isPhoneVerified: Type.Optional(Type.Boolean()),
   isEmailVerified: Type.Optional(Type.Boolean()),
+  totpSecret: Type.Optional(Type.String()),
+  totpEnabled: Type.Optional(Type.Boolean()),
+  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('none')])),
+  emailOtpCode: Type.Optional(Type.String()),
+  emailOtpExpiry: Type.Optional(Type.String()),
 });
 
 export const UsersPatchSchema = Type.Object({
@@ -41,6 +51,11 @@ export const UsersPatchSchema = Type.Object({
   accountStatus: Type.Optional(Type.Union([Type.Literal('invited'), Type.Literal('active'), Type.Literal('suspended'), Type.Literal('disabled'), Type.Literal('locked')])),
   isPhoneVerified: Type.Optional(Type.Boolean()),
   isEmailVerified: Type.Optional(Type.Boolean()),
+  totpSecret: Type.Optional(Type.String()),
+  totpEnabled: Type.Optional(Type.Boolean()),
+  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('none')])),
+  emailOtpCode: Type.Optional(Type.String()),
+  emailOtpExpiry: Type.Optional(Type.String()),
 });
 
 export const UsersQuerySchema = Type.Object({

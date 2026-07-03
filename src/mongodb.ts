@@ -15,7 +15,7 @@ export function getCollection(app: Application, name: string) {
 }
 
 export async function configureMongoDB(app: Application) {
-  const uri = (app.get('mongodb') as string) || (process.env.mongodb || 'mongodb://localhost:27017/apm-campaign') as string;
+  const uri = (process.env.mongodb || app.get('mongodb') as string || 'mongodb://localhost:27017/apm-campaign') as string;
   const client = new MongoClient(uri);
   const connectPromise = client.connect().then(() => client);
 

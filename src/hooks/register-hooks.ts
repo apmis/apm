@@ -59,6 +59,8 @@ import { DashboardSnapshotsResultSchema, DashboardSnapshotsDataSchema, Dashboard
 import { AuditLogsResultSchema, AuditLogsDataSchema, AuditLogsPatchSchema, AuditLogsQuerySchema } from '../services/audit-logs/audit-logs.js';
 import { DataExportsResultSchema, DataExportsDataSchema, DataExportsPatchSchema, DataExportsQuerySchema } from '../services/data-exports/data-exports.js';
 import { SystemSettingsResultSchema, SystemSettingsDataSchema, SystemSettingsPatchSchema, SystemSettingsQuerySchema } from '../services/system-settings/system-settings.js';
+import { StatesResultSchema, StatesDataSchema, StatesPatchSchema, StatesQuerySchema } from '../services/states/states.js';
+import { VoterContactsResultSchema, VoterContactsDataSchema, VoterContactsPatchSchema, VoterContactsQuerySchema } from '../services/voter-contacts/voter-contacts.js';
 
 type ServiceConfig = {
   path: string;
@@ -124,6 +126,8 @@ export function registerHooks(app: Application) {
     { path: 'apm/audit-logs', querySchema: AuditLogsQuerySchema, dataSchema: AuditLogsDataSchema, patchSchema: AuditLogsPatchSchema },
     { path: 'apm/data-exports', querySchema: DataExportsQuerySchema, dataSchema: DataExportsDataSchema, patchSchema: DataExportsPatchSchema },
     { path: 'apm/system-settings', querySchema: SystemSettingsQuerySchema, dataSchema: SystemSettingsDataSchema, patchSchema: SystemSettingsPatchSchema },
+    { path: 'apm/states', querySchema: StatesQuerySchema, dataSchema: StatesDataSchema, patchSchema: StatesPatchSchema, publicRead: true },
+    { path: 'apm/voter-contacts', querySchema: VoterContactsQuerySchema, dataSchema: VoterContactsDataSchema, patchSchema: VoterContactsPatchSchema },
   ];
 
   const CUSTOM_METHOD_PATHS = new Set([
@@ -137,6 +141,27 @@ export function registerHooks(app: Application) {
       context.http = { ...context.http, status: 200 };
     }
   };
+
+  // ─── Auth service hooks (conditional auth based on method) ───
+  const AUTH_METHODS_REQUIRING_AUTH = new Set([
+    'setup2fa', 'enable2fa', 'disable2fa', 'getDevices',
+    'addDevice', 'confirmDevice', 'removeDevice',
+  ]);
+  try {
+    const authSvc = app.service('apm/auth');
+    const conditionalAuth = async (context: any) => {
+      const method = context.data?.method;
+      if (method && AUTH_METHODS_REQUIRING_AUTH.has(method)) {
+        if (context.data?.challengeToken) return context;
+        return authenticate('jwt')(context);
+      }
+      return context;
+    };
+    authSvc.hooks({
+      before: { create: [conditionalAuth] },
+      error: { all: [writeAuditLog()] },
+    });
+  } catch { /* ignore if auth service not yet available */ }
 
   for (const svc of services) {
     const readAuth = svc.publicRead ? [] : svc.authenticatedRead ? [authenticate('jwt')] : AUTH_ADMIN;

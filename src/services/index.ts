@@ -52,6 +52,9 @@ import * as DashboardSnapshots from './dashboard-snapshots/dashboard-snapshots.j
 import * as AuditLogs from './audit-logs/audit-logs.js';
 import * as DataExports from './data-exports/data-exports.js';
 import * as SystemSettings from './system-settings/system-settings.js';
+import * as States from './states/states.js';
+import * as VoterContacts from './voter-contacts/voter-contacts.js';
+import * as Auth from './auth/auth.js';
 
 const STANDARD_METHODS = ['find', 'get', 'create', 'patch', 'remove'];
 const CUSTOM_ELECTION_METHODS = [...STANDARD_METHODS, 'verifyResult', 'rejectResult', 'getDashboard', 'reconcile'];
@@ -308,4 +311,18 @@ export function registerServices(app: Application) {
   app.use('/apm/system-settings', new SystemSettings.SystemSettingsService(SystemSettings.getOptions(app)), {
     docs: swaggerDocs('system-settings', { result: SystemSettings.SystemSettingsResultSchema, data: SystemSettings.SystemSettingsDataSchema, patch: SystemSettings.SystemSettingsPatchSchema, query: SystemSettings.SystemSettingsQuerySchema }, 'System configuration settings'),
   });
+
+  // ─── States ───
+  app.use('/apm/states', new States.StatesService(States.getOptions(app)), {
+    docs: swaggerDocs('states', { result: States.StatesResultSchema, data: States.StatesDataSchema, patch: States.StatesPatchSchema, query: States.StatesQuerySchema }, 'Nigerian states/regions'),
+  });
+
+  // ─── Voter Contacts ───
+  app.use('/apm/voter-contacts', new VoterContacts.VoterContactsService(VoterContacts.getOptions(app)), {
+    docs: swaggerDocs('voter-contacts', { result: VoterContacts.VoterContactsResultSchema, data: VoterContacts.VoterContactsDataSchema, patch: VoterContacts.VoterContactsPatchSchema, query: VoterContacts.VoterContactsQuerySchema }, 'Voter contact records from canvassing'),
+  });
+
+  // ─── Auth Service (custom 2FA-aware auth endpoints) ───
+  // All auth operations use POST /apm/auth with { method, ...data }
+  app.use('/apm/auth', new Auth.AuthService(app));
 }

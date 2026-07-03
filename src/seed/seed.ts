@@ -1,6 +1,9 @@
+import { config } from 'dotenv';
+config();
 import { MongoClient } from 'mongodb';
+import { hash } from 'bcryptjs';
 
-const URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/apm-campaign';
+const URI = process.env.mongodb || process.env.MONGODB_URI || 'mongodb://localhost:27017/apm-campaign';
 const NAMES = ['Rashidi Adebayo', 'Modupe Alabi', 'Ifeanyi Okafor', 'Grace Okoro', 'Sikiru Lawal',
   'Bukola Salami', 'Yusuf Bello', 'Nkechi Umeh', 'Segun Ogunlade', 'Aminat Yusuf',
   'Rotimi Adegoke', 'Chioma Nwankwo', 'Tunde Ojo', 'Folake Adeyemi', 'Chinedu Okonkwo',
@@ -10,14 +13,80 @@ async function seed() {
   const client = new MongoClient(URI);
   await client.connect();
   const db = client.db();
-
-  const existing = await db.collection('lgas').countDocuments();
-  if (existing > 0) { console.log('Already seeded'); await client.close(); return; }
-
   const now = new Date();
   const base = { createdAt: now, updatedAt: now, revision: 1 };
 
+  const usersExist = await db.collection('users').countDocuments();
+  if (usersExist === 0) {
+    const passwordHash = await hash('password', 12);
+    await db.collection('users').insertOne({
+      name: 'Admin',
+      email: 'admin',
+      password: passwordHash,
+      permissions: ['apm_admin'],
+      primaryRoleCode: 'ADMIN',
+      accountStatus: 'active',
+      isPhoneVerified: true,
+      isEmailVerified: true,
+      totpEnabled: false,
+      twoFactorMethod: 'none',
+      ...base,
+    });
+    console.log('Seeded default admin user: admin / password');
+  } else {
+    console.log('Users already seeded, skipping default admin user');
+  }
+
+  // --- States ---
+  const statesExist = await db.collection('states').countDocuments();
+  if (statesExist === 0) {
+    const states = [
+      { code: 'AB', name: 'Abia', displayOrder: 0 },
+      { code: 'AD', name: 'Adamawa', displayOrder: 1 },
+      { code: 'AK', name: 'Akwa Ibom', displayOrder: 2 },
+      { code: 'AN', name: 'Anambra', displayOrder: 3 },
+      { code: 'BA', name: 'Bauchi', displayOrder: 4 },
+      { code: 'BY', name: 'Bayelsa', displayOrder: 5 },
+      { code: 'BE', name: 'Benue', displayOrder: 6 },
+      { code: 'BO', name: 'Borno', displayOrder: 7 },
+      { code: 'CR', name: 'Cross River', displayOrder: 8 },
+      { code: 'DT', name: 'Delta', displayOrder: 9 },
+      { code: 'EB', name: 'Ebonyi', displayOrder: 10 },
+      { code: 'ED', name: 'Edo', displayOrder: 11 },
+      { code: 'EK', name: 'Ekiti', displayOrder: 12 },
+      { code: 'EN', name: 'Enugu', displayOrder: 13 },
+      { code: 'FC', name: 'FCT', displayOrder: 14 },
+      { code: 'GO', name: 'Gombe', displayOrder: 15 },
+      { code: 'IM', name: 'Imo', displayOrder: 16 },
+      { code: 'JI', name: 'Jigawa', displayOrder: 17 },
+      { code: 'KD', name: 'Kaduna', displayOrder: 18 },
+      { code: 'KN', name: 'Kano', displayOrder: 19 },
+      { code: 'KT', name: 'Katsina', displayOrder: 20 },
+      { code: 'KE', name: 'Kebbi', displayOrder: 21 },
+      { code: 'KO', name: 'Kogi', displayOrder: 22 },
+      { code: 'KW', name: 'Kwara', displayOrder: 23 },
+      { code: 'LA', name: 'Lagos', displayOrder: 24 },
+      { code: 'NA', name: 'Nasarawa', displayOrder: 25 },
+      { code: 'NI', name: 'Niger', displayOrder: 26 },
+      { code: 'OG', name: 'Ogun', displayOrder: 27 },
+      { code: 'ON', name: 'Ondo', displayOrder: 28 },
+      { code: 'OS', name: 'Osun', displayOrder: 29 },
+      { code: 'OY', name: 'Oyo', displayOrder: 30 },
+      { code: 'PL', name: 'Plateau', displayOrder: 31 },
+      { code: 'RV', name: 'Rivers', displayOrder: 32 },
+      { code: 'SO', name: 'Sokoto', displayOrder: 33 },
+      { code: 'TA', name: 'Taraba', displayOrder: 34 },
+      { code: 'YO', name: 'Yobe', displayOrder: 35 },
+      { code: 'ZA', name: 'Zamfara', displayOrder: 36 },
+    ].map(s => ({ ...s, ...base }));
+    await db.collection('states').insertMany(states);
+    console.log(`Seeded ${states.length} states`);
+  }
+
   // --- LGAs ---
+  const lgasExist = await db.collection('lgas').countDocuments();
+  if (lgasExist > 0) { console.log('LGAs already seeded, skipping rest'); await client.close(); return; }
+
   const lgas = [
     { code: 'AFI', name: 'Afijio', region: 'Oyo', displayOrder: 0 },
     { code: 'AKI', name: 'Akinyele', region: 'Oyo', displayOrder: 1 },
