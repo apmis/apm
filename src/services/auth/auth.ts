@@ -1,33 +1,48 @@
-import { Type, type Static } from '@sinclair/typebox';
-import type { Application, Params } from '@feathersjs/feathers';
-import { BadRequest, NotAuthenticated, NotFound } from '@feathersjs/errors';
-import { compare, hash } from 'bcryptjs';
-import { generateSecret, generateURI, verifySync } from 'otplib/functional';
-import { SignJWT, jwtVerify } from 'jose';
-import QRCode from 'qrcode';
-import * as crypto from 'crypto';
-import { ObjectId } from 'mongodb';
-import { getCollection } from '../../mongodb.js';
+import { Type, type Static } from "@sinclair/typebox";
+import type { Application, Params } from "@feathersjs/feathers";
+import { BadRequest, NotAuthenticated, NotFound } from "@feathersjs/errors";
+import { compare, hash } from "bcryptjs";
+import { generateSecret, generateURI, verifySync } from "otplib/functional";
+import { SignJWT, jwtVerify } from "jose";
+import QRCode from "qrcode";
+import * as crypto from "crypto";
+import { ObjectId } from "mongodb";
+import { getCollection } from "../../mongodb.js";
+import { sendEmail } from "../zeptomail.js";
+import { sendSms } from "../termii.js";
 
 const secretKey = new TextEncoder().encode(
-  process.env.AUTH_SECRET || 'fallback-secret-do-not-use-in-production',
+  process.env.AUTH_SECRET || "fallback-secret-do-not-use-in-production",
 );
 
 // ─── Schemas ───
 
 export const AuthLoginSchema = Type.Object({
-  email: Type.String(),
+  email: Type.Optional(Type.String()),
+  phone: Type.Optional(Type.String()),
   password: Type.String(),
 });
 
 export const AuthVerify2faSchema = Type.Object({
   challengeToken: Type.String(),
   code: Type.String(),
-  type: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email')])),
+  type: Type.Optional(
+    Type.Union([
+      Type.Literal("totp"),
+      Type.Literal("email"),
+      Type.Literal("phone"),
+    ]),
+  ),
 });
 
 export const AuthSetup2faSchema = Type.Object({
-  type: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email')])),
+  type: Type.Optional(
+    Type.Union([
+      Type.Literal("totp"),
+      Type.Literal("email"),
+      Type.Literal("phone"),
+    ]),
+  ),
   challengeToken: Type.Optional(Type.String()),
 });
 
@@ -72,6 +87,15 @@ export const AuthResetPasswordSchema = Type.Object({
   newPassword: Type.String({ minLength: 8 }),
 });
 
+export const AuthSendPhoneOtpSchema = Type.Object({
+  phone: Type.String(),
+});
+
+export const AuthVerifyPhoneSchema = Type.Object({
+  phone: Type.String(),
+  code: Type.String(),
+});
+
 export const AuthResendOtpSchema = Type.Object({
   challengeToken: Type.String(),
 });
@@ -94,54 +118,107 @@ export class AuthService {
 
   async create(data: any, params?: Params) {
     const method = data?.method;
-    if (!method) throw new BadRequest('Method not specified');
+    if (!method) throw new BadRequest("Method not specified");
 
     switch (method) {
-      case 'login': return this.login(data);
-      case 'register': return this.register(data);
-      case 'verify2fa': return this.verify2fa(data);
-      case 'setup2fa': return this.setup2fa(data, params);
-      case 'enable2fa': return this.enable2fa(data, params);
-      case 'disable2fa': return this.disable2fa(data, params);
-      case 'getDevices': return this.getDevices(params);
-      case 'addDevice': return this.addDevice(data, params);
-      case 'confirmDevice': return this.confirmDevice(data, params);
-      case 'removeDevice': return this.removeDevice(data, params);
-      case 'sendEmailOtp': return this.sendEmailOtp(data);
-      case 'verifyEmail': return this.verifyEmail(data);
-      case 'resendEmailOtp': return this.resendEmailOtp(data);
-      case 'forgotPassword': return this.forgotPassword(data);
-      case 'resetPassword': return this.resetPassword(data);
-      default: throw new BadRequest(`Unknown auth method: ${method}`);
+      case "login":
+        return this.login(data);
+      case "register":
+        return this.register(data);
+      case "verify2fa":
+        return this.verify2fa(data);
+      case "setup2fa":
+        return this.setup2fa(data, params);
+      case "enable2fa":
+        return this.enable2fa(data, params);
+      case "disable2fa":
+        return this.disable2fa(data, params);
+      case "getDevices":
+        return this.getDevices(params);
+      case "addDevice":
+        return this.addDevice(data, params);
+      case "confirmDevice":
+        return this.confirmDevice(data, params);
+      case "removeDevice":
+        return this.removeDevice(data, params);
+      case "sendEmailOtp":
+        return this.sendEmailOtp(data);
+      case "verifyEmail":
+        return this.verifyEmail(data);
+      case "sendPhoneOtp":
+        return this.sendPhoneOtp(data);
+      case "verifyPhone":
+        return this.verifyPhone(data);
+      case "resendEmailOtp":
+        return this.resendEmailOtp(data);
+      case "resendPhoneOtp":
+        return this.resendPhoneOtp(data);
+      case "forgotPassword":
+        return this.forgotPassword(data);
+      case "resetPassword":
+        return this.resetPassword(data);
+      default:
+        throw new BadRequest(`Unknown auth method: ${method}`);
     }
   }
 
   // ─── Login (First Factor) ───
 
   async login(data: Static<typeof AuthLoginSchema>) {
-    const collection = await getCollection(this.app, 'users');
-    const user = await collection.findOne({ email: data.email.toLowerCase().trim() });
+    const collection = await getCollection(this.app, "users");
 
+    let user: any = null;
+    if (data.email) {
+      user = await collection.findOne({
+        email: data.email.toLowerCase().trim(),
+      });
+    } else if (data.phone) {
+      const phoneDigits = data.phone.replace(/\D/g, "");
+      user = await collection.findOne({
+        phoneNumber: { $regex: phoneDigits + "$" },
+      });
+    }
     if (!user || !user.password) {
-      return { success: false, error: 'Invalid email or password' };
+      return { success: false, error: "Invalid email/phone or password" };
     }
 
-    if (user.accountStatus === 'suspended' || user.accountStatus === 'disabled' || user.accountStatus === 'locked') {
-      return { success: false, error: 'Account is not accessible' };
+    if (
+      user.accountStatus === "suspended" ||
+      user.accountStatus === "disabled" ||
+      user.accountStatus === "locked"
+    ) {
+      return { success: false, error: "Account is not accessible" };
     }
 
     const isValid = await compare(data.password, user.password);
     if (!isValid) {
-      return { success: false, error: 'Invalid email or password' };
+      return { success: false, error: "Invalid email/phone or password" };
     }
 
-    if (!user.isEmailVerified) {
+    if (user.email && !user.isEmailVerified) {
       const otp = crypto.randomInt(100000, 999999).toString();
       const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await collection.updateOne(
         { _id: user._id },
         { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
       );
+
+      await sendEmail({
+        to: user.email,
+        toName: user.name,
+        subject: "Verify your email — APM Campaign",
+        htmlBody: `
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+            <h2 style="color: #1a1a2e;">Email Verification</h2>
+            <p>Your verification code is:</p>
+            <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                        padding: 16px; background: #f0f0f5; border-radius: 8px; margin: 16px 0;">
+              ${otp}
+            </div>
+            <p style="color: #666;">This code expires in 10 minutes. If you did not request this, please ignore this email.</p>
+          </div>`,
+        textBody: `Your verification code is: ${otp}. It expires in 10 minutes.`,
+      });
 
       const challengeToken = await createChallengeToken(user._id.toString());
       return {
@@ -153,17 +230,71 @@ export class AuthService {
       };
     }
 
+    if (user.phoneNumber && !user.isPhoneVerified) {
+      const otp = crypto.randomInt(100000, 999999).toString();
+      const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await collection.updateOne(
+        { _id: user._id },
+        { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
+      );
+
+      await sendSms(
+        user.phoneNumber,
+        `Your APM Campaign verification code is: ${otp}. It expires in 10 minutes.`,
+      );
+
+      const challengeToken = await createChallengeToken(user._id.toString());
+      return {
+        success: true,
+        needsPhoneVerification: true,
+        phone: user.phoneNumber,
+        challengeToken,
+        userId: user._id.toString(),
+      };
+    }
+
     const totpEnabled = user.totpEnabled ?? false;
     if (totpEnabled) {
       const challengeToken = await createChallengeToken(user._id.toString());
-      const method = user.twoFactorMethod || 'totp';
+      const method = user.twoFactorMethod || "totp";
 
-      if (method === 'email') {
+      if (method === "email") {
         const otp = crypto.randomInt(100000, 999999).toString();
         const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         await collection.updateOne(
           { _id: user._id },
           { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
+        );
+
+        await sendEmail({
+          to: user.email,
+          toName: user.name,
+          subject: "Your two-factor authentication code — APM Campaign",
+          htmlBody: `
+            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+              <h2 style="color: #1a1a2e;">Two-Factor Authentication</h2>
+              <p>Your authentication code is:</p>
+              <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                          padding: 16px; background: #f0f0f5; border-radius: 8px; margin: 16px 0;">
+                ${otp}
+              </div>
+              <p style="color: #666;">This code expires in 10 minutes. If you did not request this, please ignore this email.</p>
+            </div>`,
+          textBody: `Your two-factor authentication code is: ${otp}. It expires in 10 minutes.`,
+        });
+      }
+
+      if (method === "phone") {
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        await collection.updateOne(
+          { _id: user._id },
+          { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
+        );
+
+        await sendSms(
+          user.phoneNumber,
+          `Your APM Campaign 2FA code is: ${otp}. It expires in 10 minutes.`,
         );
       }
 
@@ -194,14 +325,17 @@ export class AuthService {
   // ─── Register ───
 
   async register(data: Static<typeof AuthRegisterSchema>) {
-    const collection = await getCollection(this.app, 'users');
-    const existing = await collection.findOne({ email: data.email.toLowerCase().trim() });
+    const collection = await getCollection(this.app, "users");
+    const existing = await collection.findOne({
+      email: data.email.toLowerCase().trim(),
+    });
     if (existing) {
-      return { success: false, error: 'A user with this email already exists' };
+      return { success: false, error: "A user with this email already exists" };
     }
 
     const passwordHash = await hash(data.password, 12);
-    const otp = crypto.randomInt(100000, 999999).toString();
+    const emailOtp = crypto.randomInt(100000, 999999).toString();
+    const phoneOtp = crypto.randomInt(100000, 999999).toString();
     const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     await collection.insertOne({
@@ -210,17 +344,44 @@ export class AuthService {
       phoneNumber: data.phone || null,
       password: passwordHash,
       permissions: [],
-      primaryRoleCode: 'FIELD_AGENT',
-      accountStatus: 'active',
+      primaryRoleCode: "FIELD_AGENT",
+      accountStatus: "active",
       isPhoneVerified: false,
       isEmailVerified: false,
       totpEnabled: false,
-      twoFactorMethod: 'none',
-      emailOtpCode: otp,
+      twoFactorMethod: "none",
+      emailOtpCode: emailOtp,
       emailOtpExpiry: expiry,
+      phoneOtpCode: phoneOtp,
+      phoneOtpExpiry: expiry,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+
+    await sendEmail({
+      to: data.email.toLowerCase().trim(),
+      toName: data.name,
+      subject: "Welcome to APM Campaign — verify your email",
+      htmlBody: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1a1a2e;">Welcome to APM Campaign</h2>
+          <p>Hello ${data.name},</p>
+          <p>Your account has been created. Use the code below to verify your email:</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                      padding: 16px; background: #f0f0f5; border-radius: 8px; margin: 16px 0;">
+            ${emailOtp}
+          </div>
+          <p style="color: #666;">This code expires in 10 minutes.</p>
+        </div>`,
+      textBody: `Welcome to APM Campaign, ${data.name}! Your email verification code is: ${emailOtp}. It expires in 10 minutes.`,
+    });
+
+    if (data.phone) {
+      await sendSms(
+        data.phone,
+        `Welcome to APM Campaign, ${data.name}! Your phone verification code is: ${phoneOtp}. It expires in 10 minutes.`,
+      );
+    }
 
     return { success: true };
   }
@@ -230,32 +391,54 @@ export class AuthService {
   async verify2fa(data: Static<typeof AuthVerify2faSchema>) {
     const userId = await verifyChallengeToken(data.challengeToken);
     if (!userId) {
-      return { success: false, error: 'Session expired. Please login again.' };
+      return { success: false, error: "Session expired. Please login again." };
     }
 
-    const collection = await getCollection(this.app, 'users');
+    const collection = await getCollection(this.app, "users");
     const user = await collection.findOne({ _id: new ObjectId(userId) });
-    if (!user) return { success: false, error: 'User not found' };
+    if (!user) return { success: false, error: "User not found" };
 
-    const method = data.type || user.twoFactorMethod || 'totp';
+    const method = data.type || user.twoFactorMethod || "totp";
     let isValid = false;
     let matchedDeviceId: string | null = null;
 
-    if (method === 'email') {
+    if (method === "email") {
       if (!user.emailOtpCode || !user.emailOtpExpiry) {
-        return { success: false, error: 'No OTP was sent. Please request a new code.' };
+        return {
+          success: false,
+          error: "No OTP was sent. Please request a new code.",
+        };
       }
       if (new Date() > new Date(user.emailOtpExpiry)) {
-        return { success: false, error: 'OTP has expired. Please request a new code.' };
+        return {
+          success: false,
+          error: "OTP has expired. Please request a new code.",
+        };
       }
       isValid = user.emailOtpCode === data.code;
+    } else if (method === "phone") {
+      if (!user.phoneOtpCode || !user.phoneOtpExpiry) {
+        return {
+          success: false,
+          error: "No OTP was sent. Please request a new code.",
+        };
+      }
+      if (new Date() > new Date(user.phoneOtpExpiry)) {
+        return {
+          success: false,
+          error: "OTP has expired. Please request a new code.",
+        };
+      }
+      isValid = user.phoneOtpCode === data.code;
     } else {
       if (user.totpSecret && verifyTotpToken(data.code, user.totpSecret)) {
         isValid = true;
       }
       if (!isValid) {
-        const devicesCollection = await getCollection(this.app, 'userDevices');
-        const devices = await devicesCollection.find({ userId, type: 'totp' }).toArray();
+        const devicesCollection = await getCollection(this.app, "userDevices");
+        const devices = await devicesCollection
+          .find({ userId, type: "totp" })
+          .toArray();
         for (const device of devices) {
           if (verifyTotpToken(data.code, device.secret)) {
             isValid = true;
@@ -266,10 +449,10 @@ export class AuthService {
       }
     }
 
-    if (!isValid) return { success: false, error: 'Invalid verification code' };
+    if (!isValid) return { success: false, error: "Invalid verification code" };
 
     if (matchedDeviceId) {
-      const devicesCollection = await getCollection(this.app, 'userDevices');
+      const devicesCollection = await getCollection(this.app, "userDevices");
       await devicesCollection.updateOne(
         { _id: new ObjectId(matchedDeviceId) },
         { $set: { lastUsedAt: new Date().toISOString() } },
@@ -282,7 +465,10 @@ export class AuthService {
 
   // ─── 2FA Setup ───
 
-  private async resolveUserId(data: any, params?: Params): Promise<string | null> {
+  private async resolveUserId(
+    data: any,
+    params?: Params,
+  ): Promise<string | null> {
     const fromJwt = this.getUserId(params);
     if (fromJwt) return fromJwt;
     if (data.challengeToken) {
@@ -293,62 +479,132 @@ export class AuthService {
 
   async setup2fa(data: Static<typeof AuthSetup2faSchema>, params?: Params) {
     const userId = await this.resolveUserId(data, params);
-    if (!userId) return { success: false, error: 'Not authenticated' };
+    if (!userId) return { success: false, error: "Not authenticated" };
 
-    const collection = await getCollection(this.app, 'users');
+    const collection = await getCollection(this.app, "users");
     const user = await collection.findOne({ _id: new ObjectId(userId) });
-    if (!user) return { success: false, error: 'User not found' };
+    if (!user) return { success: false, error: "User not found" };
 
-    const method = data.type || 'totp';
+    const method = data.type || "totp";
 
-    if (method === 'email') {
+    if (method === "email") {
       const otp = crypto.randomInt(100000, 999999).toString();
       const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await collection.updateOne(
         { _id: user._id },
-        { $set: { emailOtpCode: otp, emailOtpExpiry: expiry, twoFactorMethod: 'email' } },
+        {
+          $set: {
+            emailOtpCode: otp,
+            emailOtpExpiry: expiry,
+            twoFactorMethod: "email",
+          },
+        },
       );
-      return { success: true, enabled: false, method: 'email' };
+
+      await sendEmail({
+        to: user.email,
+        toName: user.name,
+        subject: "Set up two-factor authentication — APM Campaign",
+        htmlBody: `
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+            <h2 style="color: #1a1a2e;">Two-Factor Authentication Setup</h2>
+            <p>Use the code below to confirm email-based two-factor authentication:</p>
+            <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                        padding: 16px; background: #f0f0f5; border-radius: 8px; margin: 16px 0;">
+              ${otp}
+            </div>
+            <p style="color: #666;">This code expires in 10 minutes. If you did not request this, please ignore this email.</p>
+          </div>`,
+        textBody: `Your 2FA setup code is: ${otp}. It expires in 10 minutes.`,
+      });
+
+      return { success: true, enabled: false, method: "email" };
+    }
+
+    if (method === "phone") {
+      const otp = crypto.randomInt(100000, 999999).toString();
+      const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await collection.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            phoneOtpCode: otp,
+            phoneOtpExpiry: expiry,
+            twoFactorMethod: "phone",
+          },
+        },
+      );
+
+      await sendSms(
+        user.phoneNumber,
+        `Your APM Campaign 2FA setup code is: ${otp}. It expires in 10 minutes.`,
+      );
+
+      return { success: true, enabled: false, method: "phone" };
     }
 
     const secret = generateSecret();
-    const uri = generateURI({ issuer: 'APM Campaign', label: user.email, secret, strategy: 'totp' });
+    const uri = generateURI({
+      issuer: "APM Campaign",
+      label: user.email,
+      secret,
+      strategy: "totp",
+    });
     const qrCode = await QRCode.toDataURL(uri);
 
     await collection.updateOne(
       { _id: user._id },
-      { $set: { totpSecret: secret, twoFactorMethod: 'totp' } },
+      { $set: { totpSecret: secret, twoFactorMethod: "totp" } },
     );
 
-    return { success: true, enabled: false, method: 'totp', secret, qrCode };
+    return { success: true, enabled: false, method: "totp", secret, qrCode };
   }
 
   async enable2fa(data: Static<typeof AuthEnable2faSchema>, params?: Params) {
     const userId = await this.resolveUserId(data, params);
-    if (!userId) return { success: false, error: 'Not authenticated' };
+    if (!userId) return { success: false, error: "Not authenticated" };
 
-    const collection = await getCollection(this.app, 'users');
+    const collection = await getCollection(this.app, "users");
     const user = await collection.findOne({ _id: new ObjectId(userId) });
-    if (!user) return { success: false, error: 'User not found' };
+    if (!user) return { success: false, error: "User not found" };
 
-    const method = user.twoFactorMethod || 'totp';
+    const method = user.twoFactorMethod || "totp";
 
-    if (method === 'email') {
+    if (method === "email") {
       if (!user.emailOtpCode || !user.emailOtpExpiry) {
-        return { success: false, error: 'No pending 2FA setup. Start setup first.' };
+        return {
+          success: false,
+          error: "No pending 2FA setup. Start setup first.",
+        };
       }
       if (new Date() > new Date(user.emailOtpExpiry)) {
-        return { success: false, error: 'OTP has expired. Start setup again.' };
+        return { success: false, error: "OTP has expired. Start setup again." };
       }
       if (user.emailOtpCode !== data.code) {
-        return { success: false, error: 'Invalid verification code' };
+        return { success: false, error: "Invalid verification code" };
+      }
+    } else if (method === "phone") {
+      if (!user.phoneOtpCode || !user.phoneOtpExpiry) {
+        return {
+          success: false,
+          error: "No pending 2FA setup. Start setup first.",
+        };
+      }
+      if (new Date() > new Date(user.phoneOtpExpiry)) {
+        return { success: false, error: "OTP has expired. Start setup again." };
+      }
+      if (user.phoneOtpCode !== data.code) {
+        return { success: false, error: "Invalid verification code" };
       }
     } else {
       if (!user.totpSecret) {
-        return { success: false, error: 'No pending 2FA setup. Start setup first.' };
+        return {
+          success: false,
+          error: "No pending 2FA setup. Start setup first.",
+        };
       }
       if (!verifyTotpToken(data.code, user.totpSecret)) {
-        return { success: false, error: 'Invalid verification code' };
+        return { success: false, error: "Invalid verification code" };
       }
     }
 
@@ -357,13 +613,13 @@ export class AuthService {
       { $set: { totpEnabled: true, emailOtpCode: null, emailOtpExpiry: null } },
     );
 
-    if (method === 'totp' && user.totpSecret) {
-      const devicesCollection = await getCollection(this.app, 'userDevices');
+    if (method === "totp" && user.totpSecret) {
+      const devicesCollection = await getCollection(this.app, "userDevices");
       await devicesCollection.insertOne({
         userId,
-        type: 'totp',
+        type: "totp",
         secret: user.totpSecret,
-        label: 'Authenticator App',
+        label: "Authenticator App",
         createdAt: new Date().toISOString(),
         lastUsedAt: null,
       });
@@ -375,17 +631,18 @@ export class AuthService {
 
   async disable2fa(data: Static<typeof AuthDisable2faSchema>, params?: Params) {
     const userId = this.getUserId(params);
-    if (!userId) return { success: false, error: 'Not authenticated' };
+    if (!userId) return { success: false, error: "Not authenticated" };
 
-    const collection = await getCollection(this.app, 'users');
+    const collection = await getCollection(this.app, "users");
     const user = await collection.findOne({ _id: new ObjectId(userId) });
-    if (!user || !user.password) return { success: false, error: 'User not found' };
+    if (!user || !user.password)
+      return { success: false, error: "User not found" };
 
     const isValid = await compare(data.password, user.password);
-    if (!isValid) return { success: false, error: 'Invalid password' };
+    if (!isValid) return { success: false, error: "Invalid password" };
 
-    const devicesCollection = await getCollection(this.app, 'userDevices');
-    await devicesCollection.deleteMany({ userId, type: 'totp' });
+    const devicesCollection = await getCollection(this.app, "userDevices");
+    await devicesCollection.deleteMany({ userId, type: "totp" });
 
     await collection.updateOne(
       { _id: user._id },
@@ -399,16 +656,17 @@ export class AuthService {
 
   async getDevices(params?: Params) {
     const userId = this.getUserId(params);
-    if (!userId) return { success: false, error: 'Not authenticated' };
+    if (!userId) return { success: false, error: "Not authenticated" };
 
-    const devicesCollection = await getCollection(this.app, 'userDevices');
-    const devices = await devicesCollection.find({ userId, type: 'totp' })
+    const devicesCollection = await getCollection(this.app, "userDevices");
+    const devices = await devicesCollection
+      .find({ userId, type: "totp" })
       .sort({ createdAt: 1 })
       .toArray();
 
     return {
       success: true,
-      devices: devices.map(d => ({
+      devices: devices.map((d) => ({
         id: d._id.toString(),
         label: d.label,
         createdAt: d.createdAt,
@@ -419,62 +677,76 @@ export class AuthService {
 
   async addDevice(data: Static<typeof AuthAddDeviceSchema>, params?: Params) {
     const userId = this.getUserId(params);
-    if (!userId) return { success: false, error: 'Not authenticated' };
+    if (!userId) return { success: false, error: "Not authenticated" };
 
     const secret = generateSecret();
-    const collection = await getCollection(this.app, 'users');
+    const collection = await getCollection(this.app, "users");
     const user = await collection.findOne({ _id: new ObjectId(userId) });
-    if (!user) return { success: false, error: 'User not found' };
+    if (!user) return { success: false, error: "User not found" };
 
-    const uri = generateURI({ issuer: 'APM Campaign', label: user.email, secret, strategy: 'totp' });
+    const uri = generateURI({
+      issuer: "APM Campaign",
+      label: user.email,
+      secret,
+      strategy: "totp",
+    });
     const qrCode = await QRCode.toDataURL(uri);
 
     return { success: true, secret, qrCode };
   }
 
-  async confirmDevice(data: Static<typeof AuthConfirmDeviceSchema>, params?: Params) {
+  async confirmDevice(
+    data: Static<typeof AuthConfirmDeviceSchema>,
+    params?: Params,
+  ) {
     const userId = this.getUserId(params);
-    if (!userId) return { success: false, error: 'Not authenticated' };
+    if (!userId) return { success: false, error: "Not authenticated" };
 
     if (!verifyTotpToken(data.code, data.secret)) {
-      return { success: false, error: 'Invalid verification code' };
+      return { success: false, error: "Invalid verification code" };
     }
 
-    const devicesCollection = await getCollection(this.app, 'userDevices');
+    const devicesCollection = await getCollection(this.app, "userDevices");
     await devicesCollection.insertOne({
       userId,
-      type: 'totp',
+      type: "totp",
       secret: data.secret,
-      label: data.label || 'Authenticator App',
+      label: data.label || "Authenticator App",
       createdAt: new Date().toISOString(),
       lastUsedAt: null,
     });
 
-    const collection = await getCollection(this.app, 'users');
+    const collection = await getCollection(this.app, "users");
     await collection.updateOne(
       { _id: new ObjectId(userId) },
-      { $set: { totpEnabled: true, twoFactorMethod: 'totp' } },
+      { $set: { totpEnabled: true, twoFactorMethod: "totp" } },
     );
 
     return { success: true };
   }
 
-  async removeDevice(data: Static<typeof AuthRemoveDeviceSchema>, params?: Params) {
+  async removeDevice(
+    data: Static<typeof AuthRemoveDeviceSchema>,
+    params?: Params,
+  ) {
     const userId = this.getUserId(params);
-    if (!userId) return { success: false, error: 'Not authenticated' };
+    if (!userId) return { success: false, error: "Not authenticated" };
 
-    const devicesCollection = await getCollection(this.app, 'userDevices');
+    const devicesCollection = await getCollection(this.app, "userDevices");
     const device = await devicesCollection.findOne({
       _id: new ObjectId(data.deviceId),
       userId,
     });
-    if (!device) return { success: false, error: 'Device not found' };
+    if (!device) return { success: false, error: "Device not found" };
 
     await devicesCollection.deleteOne({ _id: new ObjectId(data.deviceId) });
 
-    const remaining = await devicesCollection.countDocuments({ userId, type: 'totp' });
+    const remaining = await devicesCollection.countDocuments({
+      userId,
+      type: "totp",
+    });
     if (remaining === 0) {
-      const collection = await getCollection(this.app, 'users');
+      const collection = await getCollection(this.app, "users");
       await collection.updateOne(
         { _id: new ObjectId(userId) },
         { $set: { totpEnabled: false, totpSecret: null } },
@@ -487,8 +759,10 @@ export class AuthService {
   // ─── Email OTP ───
 
   async sendEmailOtp(data: Static<typeof AuthSendEmailOtpSchema>) {
-    const collection = await getCollection(this.app, 'users');
-    const user = await collection.findOne({ email: data.email.toLowerCase().trim() });
+    const collection = await getCollection(this.app, "users");
+    const user = await collection.findOne({
+      email: data.email.toLowerCase().trim(),
+    });
     if (!user) return { success: true };
     if (user.isEmailVerified) return { success: true };
 
@@ -499,27 +773,108 @@ export class AuthService {
       { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
     );
 
+    await sendEmail({
+      to: user.email,
+      toName: user.name,
+      subject: "Verify your email — APM Campaign",
+      htmlBody: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1a1a2e;">Email Verification</h2>
+          <p>Your verification code is:</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                      padding: 16px; background: #f0f0f5; border-radius: 8px; margin: 16px 0;">
+            ${otp}
+          </div>
+          <p style="color: #666;">This code expires in 10 minutes. If you did not request this, please ignore this email.</p>
+        </div>`,
+      textBody: `Your verification code is: ${otp}. It expires in 10 minutes.`,
+    });
+
     return { success: true };
   }
 
   async verifyEmail(data: Static<typeof AuthVerifyEmailSchema>) {
-    const collection = await getCollection(this.app, 'users');
-    const user = await collection.findOne({ email: data.email.toLowerCase().trim() });
-    if (!user) return { success: false, error: 'User not found' };
+    const collection = await getCollection(this.app, "users");
+    const user = await collection.findOne({
+      email: data.email.toLowerCase().trim(),
+    });
+    if (!user) return { success: false, error: "User not found" };
     if (user.isEmailVerified) return { success: true };
     if (!user.emailOtpCode || !user.emailOtpExpiry) {
-      return { success: false, error: 'No verification code was sent' };
+      return { success: false, error: "No verification code was sent" };
     }
     if (new Date() > new Date(user.emailOtpExpiry)) {
-      return { success: false, error: 'Verification code has expired' };
+      return { success: false, error: "Verification code has expired" };
     }
     if (user.emailOtpCode !== data.code) {
-      return { success: false, error: 'Invalid verification code' };
+      return { success: false, error: "Invalid verification code" };
     }
 
     await collection.updateOne(
       { _id: user._id },
-      { $set: { isEmailVerified: true, emailOtpCode: null, emailOtpExpiry: null } },
+      {
+        $set: {
+          isEmailVerified: true,
+          emailOtpCode: null,
+          emailOtpExpiry: null,
+        },
+      },
+    );
+
+    return { success: true };
+  }
+
+  async sendPhoneOtp(data: Static<typeof AuthSendPhoneOtpSchema>) {
+    const collection = await getCollection(this.app, "users");
+    const phoneDigits = data.phone.replace(/\D/g, "");
+    const user = await collection.findOne({
+      phoneNumber: { $regex: phoneDigits + "$" },
+    });
+    if (!user) return { success: true };
+    if (user.isPhoneVerified) return { success: true };
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
+    );
+
+    await sendSms(
+      data.phone,
+      `Your APM Campaign phone verification code is: ${otp}. It expires in 10 minutes.`,
+    );
+
+    return { success: true };
+  }
+
+  async verifyPhone(data: Static<typeof AuthVerifyPhoneSchema>) {
+    const collection = await getCollection(this.app, "users");
+    const phoneDigits = data.phone.replace(/\D/g, "");
+    const user = await collection.findOne({
+      phoneNumber: { $regex: phoneDigits + "$" },
+    });
+    if (!user) return { success: false, error: "User not found" };
+    if (user.isPhoneVerified) return { success: true };
+    if (!user.phoneOtpCode || !user.phoneOtpExpiry) {
+      return { success: false, error: "No verification code was sent" };
+    }
+    if (new Date() > new Date(user.phoneOtpExpiry)) {
+      return { success: false, error: "Verification code has expired" };
+    }
+    if (user.phoneOtpCode !== data.code) {
+      return { success: false, error: "Invalid verification code" };
+    }
+
+    await collection.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          isPhoneVerified: true,
+          phoneOtpCode: null,
+          phoneOtpExpiry: null,
+        },
+      },
     );
 
     return { success: true };
@@ -527,12 +882,15 @@ export class AuthService {
 
   async resendEmailOtp(data: Static<typeof AuthResendOtpSchema>) {
     const userId = await verifyChallengeToken(data.challengeToken);
-    if (!userId) return { success: false, error: 'Session expired' };
+    if (!userId) return { success: false, error: "Session expired" };
 
-    const collection = await getCollection(this.app, 'users');
+    const collection = await getCollection(this.app, "users");
     const user = await collection.findOne({ _id: new ObjectId(userId) });
     if (!user || !user.totpEnabled) {
-      return { success: false, error: '2FA is not configured for this account' };
+      return {
+        success: false,
+        error: "2FA is not configured for this account",
+      };
     }
 
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -540,6 +898,48 @@ export class AuthService {
     await collection.updateOne(
       { _id: user._id },
       { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
+    );
+
+    await sendEmail({
+      to: user.email,
+      toName: user.name,
+      subject: "Your two-factor authentication code — APM Campaign",
+      htmlBody: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1a1a2e;">Two-Factor Authentication</h2>
+          <p>Your authentication code is:</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                      padding: 16px; background: #f0f0f5; border-radius: 8px; margin: 16px 0;">
+            ${otp}
+          </div>
+          <p style="color: #666;">This code expires in 10 minutes. If you did not request this, please ignore this email.</p>
+        </div>`,
+      textBody: `Your two-factor authentication code is: ${otp}. It expires in 10 minutes.`,
+    });
+
+    return { success: true };
+  }
+
+  async resendPhoneOtp(data: Static<typeof AuthResendOtpSchema>) {
+    const userId = await verifyChallengeToken(data.challengeToken);
+    if (!userId) return { success: false, error: "Session expired" };
+
+    const collection = await getCollection(this.app, "users");
+    const user = await collection.findOne({ _id: new ObjectId(userId) });
+    if (!user || !user.phoneNumber) {
+      return { success: false, error: "No phone number on this account" };
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
+    );
+
+    await sendSms(
+      user.phoneNumber,
+      `Your APM Campaign verification code is: ${otp}. It expires in 10 minutes.`,
     );
 
     return { success: true };
@@ -548,28 +948,51 @@ export class AuthService {
   // ─── Password Reset ───
 
   async forgotPassword(data: Static<typeof AuthForgotPasswordSchema>) {
-    const collection = await getCollection(this.app, 'users');
-    const user = await collection.findOne({ email: data.email.toLowerCase().trim() });
+    const collection = await getCollection(this.app, "users");
+    const user = await collection.findOne({
+      email: data.email.toLowerCase().trim(),
+    });
     if (!user) return { success: true };
 
-    const token = await new SignJWT({ email: user.email, purpose: 'reset' })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('1h')
+    const token = await new SignJWT({ email: user.email, purpose: "reset" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("1h")
       .setIssuedAt()
       .sign(secretKey);
 
-    return { success: true, token };
+    const clientOrigin = process.env.CLIENT_ORIGIN || "https://apm.app";
+    const resetLink = `${clientOrigin}/reset-password?token=${token}`;
+
+    await sendEmail({
+      to: user.email,
+      toName: user.name,
+      subject: "Reset your password — APM Campaign",
+      htmlBody: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #1a1a2e;">Password Reset</h2>
+          <p>Click the button below to reset your password. This link expires in 1 hour.</p>
+          <a href="${resetLink}"
+             style="display: inline-block; padding: 12px 24px; background: #1a1a2e; color: #fff;
+                    text-decoration: none; border-radius: 6px; margin: 16px 0;">
+            Reset Password
+          </a>
+          <p style="color: #666;">If you did not request a password reset, please ignore this email.</p>
+        </div>`,
+      textBody: `Reset your password here: ${resetLink}. This link expires in 1 hour.`,
+    });
+
+    return { success: true };
   }
 
   async resetPassword(data: Static<typeof AuthResetPasswordSchema>) {
     try {
       const { payload } = await jwtVerify(data.token, secretKey);
-      if (payload.purpose !== 'reset' || !payload.email) {
-        return { success: false, error: 'Invalid or expired reset link' };
+      if (payload.purpose !== "reset" || !payload.email) {
+        return { success: false, error: "Invalid or expired reset link" };
       }
 
       const passwordHash = await hash(data.newPassword, 12);
-      const collection = await getCollection(this.app, 'users');
+      const collection = await getCollection(this.app, "users");
       await collection.updateOne(
         { email: payload.email as string },
         { $set: { password: passwordHash } },
@@ -577,7 +1000,7 @@ export class AuthService {
 
       return { success: true };
     } catch {
-      return { success: false, error: 'Invalid or expired reset link' };
+      return { success: false, error: "Invalid or expired reset link" };
     }
   }
 
@@ -589,16 +1012,16 @@ export class AuthService {
   }
 
   private async createAccessToken(user: any): Promise<string> {
-    const authService = this.app.service('authentication');
+    const authService = this.app.service("authentication");
     const token = await (authService as any).createAccessToken(
       {
         userId: user._id.toString(),
         email: user.email,
         name: user.name,
         permissions: user.permissions || [],
-        primaryRoleCode: user.primaryRoleCode || '',
+        primaryRoleCode: user.primaryRoleCode || "",
       },
-      { subject: user._id.toString(), expiresIn: '1d' },
+      { subject: user._id.toString(), expiresIn: "1d" },
     );
     return token;
   }
@@ -612,9 +1035,9 @@ function verifyTotpToken(token: string, secret: string): boolean {
 }
 
 async function createChallengeToken(userId: string): Promise<string> {
-  return new SignJWT({ userId, purpose: '2fa' })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('5m')
+  return new SignJWT({ userId, purpose: "2fa" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("5m")
     .setIssuedAt()
     .sign(secretKey);
 }
@@ -622,7 +1045,7 @@ async function createChallengeToken(userId: string): Promise<string> {
 async function verifyChallengeToken(token: string): Promise<string | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey);
-    if (payload.purpose === '2fa' && payload.userId) {
+    if (payload.purpose === "2fa" && payload.userId) {
       return payload.userId as string;
     }
     return null;
