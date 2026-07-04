@@ -840,6 +840,8 @@ export class AuthService {
       { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
     );
 
+    console.log(`Sending phone OTP to ${data.phone}: ${otp}`); // For debugging purposes
+
     await sendSms(
       data.phone,
       `Your APM Campaign phone verification code is: ${otp}. It expires in 10 minutes.`,
