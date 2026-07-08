@@ -17,6 +17,10 @@ export type { Application } from '@feathersjs/feathers';
 
 export async function createApp(overrides?: Record<string, unknown>) {
   const app = koa(feathers());
+  const isProduction = process.env.NODE_ENV === 'production';
+const serverUrl = isProduction 
+  ? 'https://apm-jbpi.onrender.com' 
+  : `http://localhost:${app.get('port')}`;
 
   const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com'];
   const corsOptions = {
@@ -48,7 +52,7 @@ export async function createApp(overrides?: Record<string, unknown>) {
         description: 'APM Campaign Digital Command System API',
         version: '0.1.0',
       },
-      servers: [{ url: 'http://localhost:' + app.get('port'), description: 'Development server' }],
+      servers: [{ url:  serverUrl, description:isProduction? 'Production server'  : 'Development server' }],
     },
     ui: swagger.swaggerUI({ docsPath: '/docs' }),
   }));
