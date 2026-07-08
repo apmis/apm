@@ -64,7 +64,7 @@ export type IncidentsQuery = Static<typeof IncidentsQuerySchema>;
 // --- Service ---
 
 export class IncidentsService extends MongoDBService<Incidents, IncidentsData> {
-  async create(data: any, params?: Params) {
+  async create(data: any, params?: Params): Promise<any> {
     const method = params?.route?.__method;
     const id = params?.route?.id;
     if (method && method !== 'escalate') (params as any).__customMethod = true;

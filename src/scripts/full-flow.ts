@@ -1,7 +1,8 @@
 import { config } from 'dotenv';
 config();
 import { MongoClient } from 'mongodb';
-import { authenticator } from 'otplib';
+import { TOTP } from 'otplib';
+const authenticator = new TOTP();
 
 const uri = process.env.mongodb || 'mongodb://localhost:27017/apm-campaign';
 async function main() {

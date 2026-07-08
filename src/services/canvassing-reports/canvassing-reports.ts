@@ -50,7 +50,7 @@ export type CanvassingReportsQuery = Static<typeof CanvassingReportsQuerySchema>
 // --- Service ---
 
 export class CanvassingReportsService extends MongoDBService<CanvassingReports, CanvassingReportsData> {
-  async create(data: any, params?: Params) {
+  async create(data: any, params?: Params): Promise<any> {
     const method = params?.route?.__method;
     if (method) (params as any).__customMethod = true;
     if (method === 'getSummary') return this.getSummary(params);

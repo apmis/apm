@@ -142,8 +142,10 @@ function swaggerDocs(name: string, s: SchemaGroup, description: string) {
     },
     docs: { description, tag: toTag(name), securities: ['find', 'get', 'create', 'patch', 'remove'] },
   });
-  for (const key of Object.keys(opts.schemas)) {
-    opts.schemas[key] = addExamples(opts.schemas[key]);
+  if (opts.schemas) {
+    for (const key of Object.keys(opts.schemas)) {
+      opts.schemas[key] = addExamples(opts.schemas[key]);
+    }
   }
   return opts;
 }

@@ -46,7 +46,7 @@ async function main() {
   console.log(`TOTP Secret: ${secret}`);
 
   // 5. Enable 2FA
-  const totpCode = authenticator.generate(secret);
+  const totpCode = totp.generate(secret);
   console.log(`\n--- Enable 2FA (code: ${totpCode}) ---`);
   const enable = await api('enable2fa', { challengeToken: challenge1, code: totpCode });
   console.log(`Access token: ${(enable.accessToken || '').substring(0, 30)}...`);
@@ -58,7 +58,7 @@ async function main() {
   const challenge2 = login2.challengeToken;
 
   // 7. Verify 2FA
-  const totpCode2 = authenticator.generate(secret);
+  const totpCode2 = totp.generate(secret);
   console.log(`\n--- Verify 2FA (code: ${totpCode2}) ---`);
   const final = await api('verify2fa', { challengeToken: challenge2, code: totpCode2, method: 'totp' });
   const token = final.accessToken;

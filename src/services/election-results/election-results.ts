@@ -77,7 +77,7 @@ export type ElectionResultsQuery = Static<typeof ElectionResultsQuerySchema>;
 // --- Service ---
 
 export class ElectionResultsService extends MongoDBService<ElectionResults, ElectionResultsData> {
-  async create(data: any, params?: Params) {
+  async create(data: any, params?: Params): Promise<any> {
     const method = params?.route?.__method;
     const id = params?.route?.id;
     if (method) (params as any).__customMethod = true;

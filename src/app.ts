@@ -48,7 +48,7 @@ export async function createApp(overrides?: Record<string, unknown>) {
         description: 'APM Campaign Digital Command System API',
         version: '0.1.0',
       },
-      servers: [{ url: 'http://localhost:3030', description: 'Development server' }],
+      servers: [{ url: 'http://localhost:' + app.get('port'), description: 'Development server' }],
     },
     ui: swagger.swaggerUI({ docsPath: '/docs' }),
   }));
