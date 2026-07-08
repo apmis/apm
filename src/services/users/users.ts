@@ -19,9 +19,11 @@ export const UsersResultSchema = Type.Object({
   isEmailVerified: Type.Boolean(),
   totpSecret: Type.Optional(Type.String()),
   totpEnabled: Type.Optional(Type.Boolean()),
-  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('none')])),
+  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('phone'), Type.Literal('none')])),
   emailOtpCode: Type.Optional(Type.String()),
   emailOtpExpiry: Type.Optional(Type.String()),
+  phoneOtpCode: Type.Optional(Type.String()),
+  phoneOtpExpiry: Type.Optional(Type.String()),
 }, { additionalProperties: false });
 
 export const UsersDataSchema = Type.Object({
@@ -36,9 +38,11 @@ export const UsersDataSchema = Type.Object({
   isEmailVerified: Type.Optional(Type.Boolean()),
   totpSecret: Type.Optional(Type.String()),
   totpEnabled: Type.Optional(Type.Boolean()),
-  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('none')])),
+  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('phone'), Type.Literal('none')])),
   emailOtpCode: Type.Optional(Type.String()),
   emailOtpExpiry: Type.Optional(Type.String()),
+  phoneOtpCode: Type.Optional(Type.String()),
+  phoneOtpExpiry: Type.Optional(Type.String()),
 });
 
 export const UsersPatchSchema = Type.Object({
@@ -53,9 +57,11 @@ export const UsersPatchSchema = Type.Object({
   isEmailVerified: Type.Optional(Type.Boolean()),
   totpSecret: Type.Optional(Type.String()),
   totpEnabled: Type.Optional(Type.Boolean()),
-  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('none')])),
+  twoFactorMethod: Type.Optional(Type.Union([Type.Literal('totp'), Type.Literal('email'), Type.Literal('phone'), Type.Literal('none')])),
   emailOtpCode: Type.Optional(Type.String()),
   emailOtpExpiry: Type.Optional(Type.String()),
+  phoneOtpCode: Type.Optional(Type.String()),
+  phoneOtpExpiry: Type.Optional(Type.String()),
 });
 
 export const UsersQuerySchema = Type.Object({
