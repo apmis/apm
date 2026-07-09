@@ -2,10 +2,10 @@ import type { Application } from '@feathersjs/feathers';
 import type { TSchema } from '@sinclair/typebox';
 import { hooks as authLocalHooks } from '@feathersjs/authentication-local';
 import {
-  authenticate, authorizePermission,
+  authenticate, authorizePermission, applyGeographyScope,
   setServerFields, softDeleteFilter, idempotency,
   protectExternal, writeAuditLog, publishByScope,
-  validateQuery, validateData,
+  validateQuery, validateData, syncRolePermissions,
 } from './index.js';
 
 const { hashPassword } = authLocalHooks;
@@ -72,7 +72,7 @@ type ServiceConfig = {
   authenticatedRead?: boolean;
 };
 
-const ADMIN_PERMS = ['apm_admin'];
+const ADMIN_PERMS = ['*', 'apm_admin'];
 const AUTH_ADMIN = [authenticate('jwt'), authorizePermission(...ADMIN_PERMS)];
 
 export function registerHooks(app: Application) {
@@ -179,10 +179,33 @@ export function registerHooks(app: Application) {
       ? [protectExternal(), setCustomMethodStatus, publishByScope()]
       : [protectExternal(), publishByScope()];
 
+    const geoScoped = svc.path === 'apm/canvassing-reports' ||
+      svc.path === 'apm/polling-unit-intelligence' ||
+      svc.path === 'apm/incidents' ||
+      svc.path === 'apm/election-results' ||
+      svc.path === 'apm/result-verifications' ||
+      svc.path === 'apm/result-reconciliations' ||
+      svc.path === 'apm/stakeholders' ||
+      svc.path === 'apm/stakeholder-engagements' ||
+      svc.path === 'apm/wards' ||
+      svc.path === 'apm/polling-units' ||
+      svc.path === 'apm/volunteers' ||
+      svc.path === 'apm/volunteer-activities' ||
+      svc.path === 'apm/election-day-reports' ||
+      svc.path === 'apm/polling-unit-agents';
+
+    const findHooks = geoScoped
+      ? [...readAuth, applyGeographyScope(), validateQuery(svc.querySchema), softDeleteFilter()]
+      : [...readAuth, validateQuery(svc.querySchema), softDeleteFilter()];
+
+    const getHooks = geoScoped
+      ? [...readAuth, applyGeographyScope(), validateQuery(svc.querySchema), softDeleteFilter()]
+      : [...readAuth, validateQuery(svc.querySchema), softDeleteFilter()];
+
     app.service(svc.path).hooks({
       before: {
-        find: [...readAuth, validateQuery(svc.querySchema), softDeleteFilter()],
-        get: [...readAuth, validateQuery(svc.querySchema), softDeleteFilter()],
+        find: findHooks,
+        get: getHooks,
         create: createHooks,
         patch: [...writeAuth, validateData(svc.patchSchema), setServerFields()],
         remove: [...writeAuth, softDeleteFilter()],
@@ -195,4 +218,17 @@ export function registerHooks(app: Application) {
       },
     });
   }
+
+  // ─── Role-assignment permission sync ─────────────────────────────
+  // When a role assignment is created, patched, or removed, recompute
+  // the affected user's effective permissions from their active roles.
+  try {
+    app.service('apm/role-assignments').hooks({
+      after: {
+        create: [syncRolePermissions],
+        patch: [syncRolePermissions],
+        remove: [syncRolePermissions],
+      },
+    });
+  } catch { /* ignore if service not yet available */ }
 }

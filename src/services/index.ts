@@ -151,9 +151,11 @@ function swaggerDocs(name: string, s: SchemaGroup, description: string) {
 }
 
 export function registerServices(app: Application) {
-  app.use('/apm/users', new Users.UsersService(Users.getOptions(app)), {
+  const usersOpts = Users.getOptions(app);
+  app.use('/apm/users', new Users.UsersService(usersOpts, app), {
     docs: swaggerDocs('users', { result: Users.UsersResultSchema, data: Users.UsersDataSchema, patch: Users.UsersPatchSchema, query: Users.UsersQuerySchema }, 'User management'),
   });
+  app.routes.insert('/apm/users/:id/setupPermissions', { service: app.service('apm/users'), params: { __method: 'setupPermissions' } });
   app.use('/apm/roles', new Roles.RolesService(Roles.getOptions(app)), {
     docs: swaggerDocs('roles', { result: Roles.RolesResultSchema, data: Roles.RolesDataSchema, patch: Roles.RolesPatchSchema, query: Roles.RolesQuerySchema }, 'Role management'),
   });

@@ -5,7 +5,7 @@
     "default": 20,
     "max": 200
   },
-  "mongodb": "mongodb://localhost:27017/apm-campaign",
+  "mongodb": "mongodb://localhost:27017/campaign_db",
   "authentication": {
     "secret": "change-this-to-a-random-secret-in-production",
     "entity": "user",
