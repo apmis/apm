@@ -19,7 +19,7 @@ async function main() {
     name: 'Test User',
     email,
     password: '$2a$12$LJ3m4ys3Lk0TSwHnbfOMe.X5S6UjGFREgHjVqGDVFsZ0TOxGON02O', // Test@12345
-    permissions: [],
+    permissions: ['polling_units_read', 'canvassing_reports_read', 'canvassing_reports_write', 'incidents_read', 'incidents_write'],
     primaryRoleCode: 'FIELD_AGENT',
     accountStatus: 'active',
     isPhoneVerified: false,

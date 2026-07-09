@@ -10,6 +10,7 @@ import { ObjectId } from "mongodb";
 import { getCollection } from "../../mongodb.js";
 import { sendEmail } from "../zeptomail.js";
 import { sendSms } from "../termii.js";
+import { FIELD_AGENT_PERMISSIONS } from "../../permissions.js";
 
 const secretKey = new TextEncoder().encode(
   process.env.AUTH_SECRET || "fallback-secret-do-not-use-in-production",
@@ -307,7 +308,7 @@ export class AuthService {
       };
     }
 
-    if (!user.totpSecret) {
+    if (!user.totpSecret && user.totpEnabled !== false) {
       const challengeToken = await createChallengeToken(user._id.toString());
       return {
         success: true,
@@ -337,13 +338,15 @@ export class AuthService {
     const emailOtp = crypto.randomInt(100000, 999999).toString();
     const phoneOtp = crypto.randomInt(100000, 999999).toString();
     const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const userId = new ObjectId();
 
     await collection.insertOne({
+      _id: userId,
       name: data.name,
       email: data.email.toLowerCase().trim(),
       phoneNumber: data.phone || null,
       password: passwordHash,
-      permissions: [],
+      permissions: FIELD_AGENT_PERMISSIONS,
       primaryRoleCode: "FIELD_AGENT",
       accountStatus: "active",
       isPhoneVerified: false,
@@ -357,6 +360,25 @@ export class AuthService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+
+    // Create a role-assignment so the sync hook can manage permissions
+    try {
+      const rolesCol = await getCollection(this.app, "roles");
+      const fieldAgentRole = await rolesCol.findOne({ code: "FIELD_AGENT" });
+      if (fieldAgentRole) {
+        const assignmentsCol = await getCollection(this.app, "roleAssignments");
+        await assignmentsCol.insertOne({
+          userId: userId.toString(),
+          roleId: fieldAgentRole._id.toString(),
+          roleCode: "FIELD_AGENT",
+          effectiveFrom: new Date().toISOString(),
+          isPrimary: true,
+          status: "active",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    } catch { /* role assignment is best-effort during registration */ }
 
     await sendEmail({
       to: data.email.toLowerCase().trim(),
@@ -950,11 +972,18 @@ export class AuthService {
   // ─── Password Reset ───
 
   async forgotPassword(data: Static<typeof AuthForgotPasswordSchema>) {
+    const email = data.email.toLowerCase().trim();
+    console.log(`[forgotPassword] Request for email: ${email}`);
+
     const collection = await getCollection(this.app, "users");
-    const user = await collection.findOne({
-      email: data.email.toLowerCase().trim(),
-    });
-    if (!user) return { success: true };
+    const user = await collection.findOne({ email });
+
+    if (!user) {
+      console.log(`[forgotPassword] No user found for ${email} — returning success to prevent enumeration`);
+      return { success: true };
+    }
+
+    console.log(`[forgotPassword] User found: ${user._id} (${user.name})`);
 
     const token = await new SignJWT({ email: user.email, purpose: "reset" })
       .setProtectedHeader({ alg: "HS256" })
@@ -962,8 +991,12 @@ export class AuthService {
       .setIssuedAt()
       .sign(secretKey);
 
+    console.log(`[forgotPassword] Reset token generated for ${email}`);
+
     const clientOrigin = process.env.CLIENT_ORIGIN || "https://apm.app";
-    const resetLink = `${clientOrigin}/reset-password?token=${token}`;
+    const resetLink = `${clientOrigin}/reset-password/${token}`;
+
+    console.log(`[forgotPassword] Calling sendEmail to ${user.email} with resetLink: ${resetLink}`);
 
     await sendEmail({
       to: user.email,
@@ -983,6 +1016,7 @@ export class AuthService {
       textBody: `Reset your password here: ${resetLink}. This link expires in 1 hour.`,
     });
 
+    console.log(`[forgotPassword] Email sent successfully to ${email}`);
     return { success: true };
   }
 

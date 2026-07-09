@@ -1,6 +1,6 @@
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import supertest from 'supertest';
-import type { TestContext, HttpRequest, HttpResponse } from '../../testing/support/types.js';
+import type { TestContext, HttpRequest, HttpResponse } from './support/types.js';
 import { createApp } from '../src/app.js';
 
 let replSet: MongoMemoryReplSet;
@@ -76,7 +76,7 @@ class FeathersTestContext implements TestContext {
       email: 'admin@apm.test',
       password: 'password123',
       name: 'Admin User',
-      permissions: ['apm_admin'],
+      permissions: ['*'],
     });
   }
 
@@ -105,7 +105,7 @@ export async function setupTestEnvironment(): Promise<void> {
     email: 'admin@apm.test',
     password: 'password123',
     name: 'Admin User',
-    permissions: ['apm_admin'],
+    permissions: ['*'],
   });
 
   await app.service('apm/users').create({
