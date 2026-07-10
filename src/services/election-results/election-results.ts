@@ -1,7 +1,7 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
-import type { Application } from '@feathersjs/feathers';
+import type { Application, Params } from '@feathersjs/feathers';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -78,6 +78,16 @@ export type ElectionResultsQuery = Static<typeof ElectionResultsQuerySchema>;
 // --- Service ---
 
 export class ElectionResultsService extends MongoDBService<ElectionResults, ElectionResultsData> {
+  async create(data: any, params?: Params): Promise<any> {
+    const method = params?.route?.__method;
+    const id = params?.route?.id;
+    if (method) (params as any).__customMethod = true;
+    if (method === 'verifyResult') return this.verifyResult(id, params);
+    if (method === 'rejectResult') return this.rejectResult(id, data || {}, params);
+    if (method === 'getDashboard') return this.getDashboard(params);
+    if (method === 'reconcile') return this.reconcile(params);
+    return super.create(data, params);
+  }
 
 }
 

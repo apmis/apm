@@ -1,7 +1,7 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
-import type { Application } from '@feathersjs/feathers';
+import type { Application, Params } from '@feathersjs/feathers';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -54,6 +54,13 @@ export type CanvassingReportsQuery = Static<typeof CanvassingReportsQuerySchema>
 // --- Service ---
 
 export class CanvassingReportsService extends MongoDBService<CanvassingReports, CanvassingReportsData> {
+  async create(data: any, params?: Params): Promise<any> {
+    const method = params?.route?.__method;
+    if (method) (params as any).__customMethod = true;
+    if (method === 'getSummary') return this.getSummary(params);
+    if (method === 'getLgaStats') return this.getLgaStats(params);
+    return super.create(data, params);
+  }
 
 }
 

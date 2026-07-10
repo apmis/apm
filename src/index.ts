@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 
 async function main() {
   const app = await createApp();
+  app.set('port', process.env.PORT || 3030)
   const port = app.get('port');
 
   app.listen(port).then(() => {

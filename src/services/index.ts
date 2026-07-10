@@ -1,4 +1,7 @@
 import type { Application } from '@feathersjs/feathers';
+import feathersSwagger from 'feathers-swagger';
+const { createSwaggerServiceOptions } = feathersSwagger as any;
+import type { TSchema } from '@sinclair/typebox';
 import { AuthService } from './auth/auth.js';
 import { UsersService, getOptions as UsersOptions } from './users/users.js';
 import { RolesService, getOptions as RolesOptions } from './roles/roles.js';
@@ -52,6 +55,152 @@ import { AuditLogsService, getOptions as AuditLogsOptions } from './audit-logs/a
 import { DataExportsService, getOptions as DataExportsOptions } from './data-exports/data-exports.js';
 import { SystemSettingsService, getOptions as SystemSettingsOptions } from './system-settings/system-settings.js';
 
+import * as Users from './users/users.js';
+import * as Roles from './roles/roles.js';
+import * as Permissions from './permissions/permissions.js';
+import * as RoleAssignments from './role-assignments/role-assignments.js';
+import * as GeographyAssignments from './geography-assignments/geography-assignments.js';
+import * as UserDevices from './user-devices/user-devices.js';
+import * as UserSessions from './user-sessions/user-sessions.js';
+import * as SenatorialDistricts from './senatorial-districts/senatorial-districts.js';
+import * as Lgas from './lgas/lgas.js';
+import * as Wards from './wards/wards.js';
+import * as PollingUnits from './polling-units/polling-units.js';
+import * as PollingUnitIntelligence from './polling-unit-intelligence/polling-unit-intelligence.js';
+import * as PollingUnitIntelligenceHistory from './polling-unit-intelligence-history/polling-unit-intelligence-history.js';
+import * as WardConversionAssessments from './ward-conversion-assessments/ward-conversion-assessments.js';
+import * as Stakeholders from './stakeholders/stakeholders.js';
+import * as StakeholderEngagements from './stakeholder-engagements/stakeholder-engagements.js';
+import * as CanvassingReports from './canvassing-reports/canvassing-reports.js';
+import * as Volunteers from './volunteers/volunteers.js';
+import * as VolunteerAssignments from './volunteer-assignments/volunteer-assignments.js';
+import * as VolunteerActivities from './volunteer-activities/volunteer-activities.js';
+import * as Tasks from './tasks/tasks.js';
+import * as ContentItems from './content-items/content-items.js';
+import * as ContentApprovalEvents from './content-approval-events/content-approval-events.js';
+import * as ContentDistributions from './content-distributions/content-distributions.js';
+import * as WhatsappGroups from './whatsapp-groups/whatsapp-groups.js';
+import * as RapidResponseIssues from './rapid-response-issues/rapid-response-issues.js';
+import * as RapidResponseActions from './rapid-response-actions/rapid-response-actions.js';
+import * as CandidateEvents from './candidate-events/candidate-events.js';
+import * as EventParticipants from './event-participants/event-participants.js';
+import * as EventReports from './event-reports/event-reports.js';
+import * as EventCommitments from './event-commitments/event-commitments.js';
+import * as PollingUnitAgents from './polling-unit-agents/polling-unit-agents.js';
+import * as AgentAssignments from './agent-assignments/agent-assignments.js';
+import * as AgentTrainingRecords from './agent-training-records/agent-training-records.js';
+import * as AgentReadinessChecklists from './agent-readiness-checklists/agent-readiness-checklists.js';
+import * as ElectionDayReports from './election-day-reports/election-day-reports.js';
+import * as Incidents from './incidents/incidents.js';
+import * as Escalations from './escalations/escalations.js';
+import * as ElectionResults from './election-results/election-results.js';
+import * as ResultVerifications from './result-verifications/result-verifications.js';
+import * as ResultReconciliations from './result-reconciliations/result-reconciliations.js';
+import * as MediaFiles from './media-files/media-files.js';
+import * as Notifications from './notifications/notifications.js';
+import * as SyncOperations from './sync-operations/sync-operations.js';
+import * as GeneratedReports from './generated-reports/generated-reports.js';
+import * as DashboardSnapshots from './dashboard-snapshots/dashboard-snapshots.js';
+import * as AuditLogs from './audit-logs/audit-logs.js';
+import * as DataExports from './data-exports/data-exports.js';
+import * as SystemSettings from './system-settings/system-settings.js';
+import * as States from './states/states.js';
+import * as VoterContacts from './voter-contacts/voter-contacts.js';
+import * as Auth from './auth/auth.js';
+
+const STANDARD_METHODS = ['find', 'get', 'create', 'patch', 'remove'];
+const CUSTOM_ELECTION_METHODS = [...STANDARD_METHODS, 'verifyResult', 'rejectResult', 'getDashboard', 'reconcile'];
+const CUSTOM_INCIDENT_METHODS = [...STANDARD_METHODS, 'escalate', 'getSummary'];
+const CUSTOM_CANVASSING_METHODS = [...STANDARD_METHODS, 'getSummary', 'getLgaStats'];
+
+type SchemaGroup = { result: TSchema; data: TSchema; patch: TSchema; query: TSchema };
+
+function generateExample(schema: any, depth = 0): any {
+  if (depth > 4 || !schema) return null;
+  if (schema.example !== undefined) return schema.example;
+  if (schema.enum?.length) return schema.enum[0];
+  if (schema.const !== undefined) return schema.const;
+  if (schema.default !== undefined) return schema.default;
+
+  if (schema.anyOf?.length) {
+    for (const variant of schema.anyOf) {
+      const v = generateExample(variant, depth + 1);
+      if (v !== null) return v;
+    }
+    return null;
+  }
+  if (schema.oneOf?.length) {
+    for (const variant of schema.oneOf) {
+      const v = generateExample(variant, depth + 1);
+      if (v !== null) return v;
+    }
+    return null;
+  }
+  if (schema.allOf?.length) {
+    const merged: any = {};
+    for (const sub of schema.allOf) {
+      const v = generateExample(sub, depth + 1);
+      if (typeof v === 'object' && v !== null) Object.assign(merged, v);
+    }
+    return Object.keys(merged).length ? merged : null;
+  }
+  if (schema.$ref) return null;
+  if (schema.type === 'string') {
+    if (schema.format === 'date-time') return '2026-03-18T10:30:00.000Z';
+    if (schema.format === 'email') return 'user@example.com';
+    if (schema.format === 'uri') return 'https://example.com/file.pdf';
+    if (schema.format === 'uuid') return '550e8400-e29b-41d4-a716-446655440000';
+    if (schema.pattern === '^[a-fA-F0-9]{24}$') return '507f1f77bcf86cd799439011';
+    return schema.minLength && schema.minLength > 0 ? 'a'.repeat(schema.minLength) : 'example';
+  }
+  if (schema.type === 'integer') return 0;
+  if (schema.type === 'number') return 0.0;
+  if (schema.type === 'boolean') return false;
+  if (schema.type === 'array') {
+    if (!schema.items) return [];
+    const item = generateExample(schema.items, depth + 1);
+    return item !== null ? [item] : [];
+  }
+  if (schema.type === 'object' && schema.properties) {
+    const result: any = {};
+    for (const [key, prop] of Object.entries(schema.properties)) {
+      result[key] = generateExample(prop as any, depth + 1);
+    }
+    return result;
+  }
+  return null;
+}
+
+function addExamples(schema: any): any {
+  if (!schema || schema.example) return schema;
+  const example = generateExample(schema);
+  if (example !== null) {
+    return { ...schema, example };
+  }
+  return schema;
+}
+
+function toTag(name: string): string {
+  return name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function swaggerDocs(name: string, s: SchemaGroup, description: string) {
+  const opts = createSwaggerServiceOptions({
+    schemas: {
+      [`${name}Schema`]: s.result,
+      [`${name}DataSchema`]: s.data,
+      [`${name}PatchSchema`]: s.patch,
+      [`${name}QuerySchema`]: s.query,
+    },
+    docs: { description, tag: toTag(name), securities: ['find', 'get', 'create', 'patch', 'remove'] },
+  });
+  if (opts.schemas) {
+    for (const key of Object.keys(opts.schemas)) {
+      opts.schemas[key] = addExamples(opts.schemas[key]);
+    }
+  }
+  return opts;
+}
 
 export function registerServices(app: Application) {
   app.use('/apm/auth', new AuthService(app));

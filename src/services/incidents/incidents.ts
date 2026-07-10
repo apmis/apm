@@ -1,7 +1,7 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
-import type { Application } from '@feathersjs/feathers';
+import type { Application, Params } from '@feathersjs/feathers';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -62,6 +62,14 @@ export type IncidentsQuery = Static<typeof IncidentsQuerySchema>;
 // --- Service ---
 
 export class IncidentsService extends MongoDBService<Incidents, IncidentsData> {
+  async create(data: any, params?: Params): Promise<any> {
+    const method = params?.route?.__method;
+    const id = params?.route?.id;
+    if (method && method !== 'escalate') (params as any).__customMethod = true;
+    if (method === 'escalate') return this.escalate(id, data, params);
+    if (method === 'getSummary') return this.getSummary(params);
+    return super.create(data, params);
+  }
 
 }
 
