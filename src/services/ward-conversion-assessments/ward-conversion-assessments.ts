@@ -10,7 +10,7 @@ export const WardConversionAssessmentsResultSchema = Type.Object({
   wardId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   assessmentWeek: Type.String(),
   score: Type.Integer({ minimum: 0, maximum: 100 }),
-  status: Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')]),
+  status: Type.Union([Type.Literal('strong'), Type.Literal('moderate'), Type.Literal('weak'), Type.Literal('unassessed')]),
   notes: Type.Optional(Type.String()),
 }, { additionalProperties: false });
 
@@ -18,7 +18,7 @@ export const WardConversionAssessmentsDataSchema = Type.Object({
   wardId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   assessmentWeek: Type.String(),
   score: Type.Integer({ minimum: 0, maximum: 100 }),
-  status: Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')]),
+  status: Type.Union([Type.Literal('strong'), Type.Literal('moderate'), Type.Literal('weak'), Type.Literal('unassessed')]),
   notes: Type.Optional(Type.String()),
 }, { additionalProperties: false });
 
@@ -26,7 +26,7 @@ export const WardConversionAssessmentsPatchSchema = Type.Object({
   wardId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   assessmentWeek: Type.Optional(Type.String()),
   score: Type.Optional(Type.Integer({ minimum: 0, maximum: 100 })),
-  status: Type.Optional(Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')])),
+  status: Type.Optional(Type.Union([Type.Literal('strong'), Type.Literal('moderate'), Type.Literal('weak'), Type.Literal('unassessed')])),
   notes: Type.Optional(Type.Optional(Type.String())),
 }, { additionalProperties: false });
 
