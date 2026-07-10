@@ -1,15 +1,15 @@
 export function normalizePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("00234")) {
+    digits = digits.slice(2);
+  }
   if (digits.startsWith("0") && digits.length === 11) {
     return "234" + digits.slice(1);
   }
-  if (digits.startsWith("234") && digits.length >= 12) {
+  if (digits.startsWith("234") && digits.length === 12) {
     return digits;
   }
-  if (digits.startsWith("+234")) {
-    return digits.slice(1);
-  }
-  return digits;
+  throw new Error(`Invalid Nigerian phone number: ${phone}`);
 }
 
 interface TermiiSendSmsResponse {
@@ -23,7 +23,7 @@ export async function sendSms(
   message: string,
 ): Promise<TermiiSendSmsResponse> {
   const apiKey = process.env.TERMII_API_KEY || "";
-  const senderId = "StringsApp ";
+  const senderId = process.env.TERMII_SENDER_ID || "StringsApp";
   const baseUrl =
     process.env.TERMII_BASE_URL || "https://v3.api.termii.com/api";
 
@@ -33,6 +33,7 @@ export async function sendSms(
   }
 
   const normalizedTo = normalizePhone(to);
+  console.log(`[sendSms] to=${normalizedTo} from=${senderId} channel=generic`);
 
   const body = {
     api_key: apiKey,
@@ -40,7 +41,7 @@ export async function sendSms(
     from: senderId,
     sms: message,
     type: "plain",
-    channel: "dnd",
+    channel: "generic",
   };
 
   try {
@@ -52,7 +53,9 @@ export async function sendSms(
     const result = (await response.json()) as TermiiSendSmsResponse;
     if (!response.ok) {
       console.error("Termii API error:", response.status, result);
+      throw new Error(`SMS failed: ${result.message || response.statusText}`);
     }
+    console.log(`SMS sent to ${normalizedTo} — message_id: ${result.message_id}`);
     return result;
   } catch (error) {
     console.error("Failed to send SMS via Termii:", error);
