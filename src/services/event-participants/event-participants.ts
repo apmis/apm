@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -21,7 +20,9 @@ export const EventParticipantsDataSchema = Type.Object({
   participantType: Type.Union([Type.Literal('stakeholder'), Type.Literal('volunteer'), Type.Literal('user'), Type.Literal('group')]),
   participantId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   displayName: Type.String(),
-});
+  attended: Type.Optional(Type.Boolean()),
+  notes: Type.Optional(Type.String()),
+}, { additionalProperties: false });
 
 export const EventParticipantsPatchSchema = Type.Object({
   eventId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
@@ -30,7 +31,7 @@ export const EventParticipantsPatchSchema = Type.Object({
   displayName: Type.Optional(Type.String()),
   attended: Type.Optional(Type.Optional(Type.Boolean())),
   notes: Type.Optional(Type.Optional(Type.String())),
-});
+}, { additionalProperties: false });
 
 export const EventParticipantsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -46,11 +47,13 @@ export type EventParticipantsQuery = Static<typeof EventParticipantsQuerySchema>
 
 // --- Service ---
 
-export class EventParticipantsService extends MongoDBService<EventParticipants, EventParticipantsData> {}
+export class EventParticipantsService extends MongoDBService<EventParticipants, EventParticipantsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'eventParticipants'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('eventParticipants')),
   id: '_id',
   disableObjectify: false,
   multi: false,

@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -13,7 +12,7 @@ export const DashboardSnapshotsResultSchema = Type.Object({
   scopeId: Type.String(),
   periodCode: Type.String(),
   metrics: Type.Object({}),
-  generatedAt: Type.String(),
+  generatedAt: Type.String({ format: 'date-time' }),
   version: Type.Integer(),
 }, { additionalProperties: false });
 
@@ -23,9 +22,9 @@ export const DashboardSnapshotsDataSchema = Type.Object({
   scopeId: Type.String(),
   periodCode: Type.String(),
   metrics: Type.Object({}),
-  generatedAt: Type.String(),
+  generatedAt: Type.String({ format: 'date-time' }),
   version: Type.Integer(),
-});
+}, { additionalProperties: false });
 
 export const DashboardSnapshotsPatchSchema = Type.Object({
   snapshotType: Type.Optional(Type.String()),
@@ -33,9 +32,9 @@ export const DashboardSnapshotsPatchSchema = Type.Object({
   scopeId: Type.Optional(Type.String()),
   periodCode: Type.Optional(Type.String()),
   metrics: Type.Optional(Type.Object({})),
-  generatedAt: Type.Optional(Type.String()),
+  generatedAt: Type.Optional(Type.String({ format: 'date-time' })),
   version: Type.Optional(Type.Integer()),
-});
+}, { additionalProperties: false });
 
 export const DashboardSnapshotsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -51,11 +50,13 @@ export type DashboardSnapshotsQuery = Static<typeof DashboardSnapshotsQuerySchem
 
 // --- Service ---
 
-export class DashboardSnapshotsService extends MongoDBService<DashboardSnapshots, DashboardSnapshotsData> {}
+export class DashboardSnapshotsService extends MongoDBService<DashboardSnapshots, DashboardSnapshotsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'dashboardSnapshots'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('dashboardSnapshots')),
   id: '_id',
   disableObjectify: false,
   multi: false,

@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -29,7 +28,7 @@ export const SystemSettingsDataSchema = Type.Object({
   isSensitive: Type.Boolean(),
   status: Type.Union([Type.Literal('draft'), Type.Literal('active'), Type.Literal('retired')]),
   updatedBy: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
-});
+}, { additionalProperties: false });
 
 export const SystemSettingsPatchSchema = Type.Object({
   key: Type.Optional(Type.String()),
@@ -41,7 +40,7 @@ export const SystemSettingsPatchSchema = Type.Object({
   isSensitive: Type.Optional(Type.Boolean()),
   status: Type.Optional(Type.Union([Type.Literal('draft'), Type.Literal('active'), Type.Literal('retired')])),
   updatedBy: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
-});
+}, { additionalProperties: false });
 
 export const SystemSettingsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -57,11 +56,13 @@ export type SystemSettingsQuery = Static<typeof SystemSettingsQuerySchema>;
 
 // --- Service ---
 
-export class SystemSettingsService extends MongoDBService<SystemSettings, SystemSettingsData> {}
+export class SystemSettingsService extends MongoDBService<SystemSettings, SystemSettingsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'systemSettings'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('systemSettings')),
   id: '_id',
   disableObjectify: false,
   multi: false,

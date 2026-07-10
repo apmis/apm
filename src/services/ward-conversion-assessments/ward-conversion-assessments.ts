@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -20,7 +19,8 @@ export const WardConversionAssessmentsDataSchema = Type.Object({
   assessmentWeek: Type.String(),
   score: Type.Integer({ minimum: 0, maximum: 100 }),
   status: Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')]),
-});
+  notes: Type.Optional(Type.String()),
+}, { additionalProperties: false });
 
 export const WardConversionAssessmentsPatchSchema = Type.Object({
   wardId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
@@ -28,7 +28,7 @@ export const WardConversionAssessmentsPatchSchema = Type.Object({
   score: Type.Optional(Type.Integer({ minimum: 0, maximum: 100 })),
   status: Type.Optional(Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')])),
   notes: Type.Optional(Type.Optional(Type.String())),
-});
+}, { additionalProperties: false });
 
 export const WardConversionAssessmentsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -44,11 +44,13 @@ export type WardConversionAssessmentsQuery = Static<typeof WardConversionAssessm
 
 // --- Service ---
 
-export class WardConversionAssessmentsService extends MongoDBService<WardConversionAssessments, WardConversionAssessmentsData> {}
+export class WardConversionAssessmentsService extends MongoDBService<WardConversionAssessments, WardConversionAssessmentsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'wardConversionAssessments'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('wardConversionAssessments')),
   id: '_id',
   disableObjectify: false,
   multi: false,

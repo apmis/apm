@@ -6,6 +6,7 @@ import {
   setServerFields, softDeleteFilter, idempotency,
   protectExternal, writeAuditLog, publishByScope,
   validateQuery, validateData, syncRolePermissions,
+  populateGeography,
 } from './index.js';
 
 const { hashPassword } = authLocalHooks;
@@ -159,6 +160,7 @@ export function registerHooks(app: Application) {
     };
     authSvc.hooks({
       before: { create: [conditionalAuth] },
+      after: { create: [writeAuditLog()] },
       error: { all: [writeAuditLog()] },
     });
   } catch { /* ignore if auth service not yet available */ }
@@ -176,8 +178,18 @@ export function registerHooks(app: Application) {
       : [...writeAuth, validateData(svc.dataSchema), ...userHooks, setServerFields()];
 
     const afterAll = CUSTOM_METHOD_PATHS.has(svc.path)
-      ? [protectExternal(), setCustomMethodStatus, publishByScope()]
-      : [protectExternal(), publishByScope()];
+      ? [protectExternal(), setCustomMethodStatus, publishByScope(), writeAuditLog()]
+      : [protectExternal(), publishByScope(), writeAuditLog()];
+
+    const GEO_POPULATE_PATHS = new Set([
+      'apm/senatorial-districts',
+      'apm/lgas',
+      'apm/wards',
+      'apm/polling-units',
+    ]);
+    const geoPopulate = GEO_POPULATE_PATHS.has(svc.path)
+      ? { find: [populateGeography()], get: [populateGeography()] }
+      : {};
 
     const geoScoped = svc.path === 'apm/canvassing-reports' ||
       svc.path === 'apm/polling-unit-intelligence' ||
@@ -212,6 +224,7 @@ export function registerHooks(app: Application) {
       },
       after: {
         all: afterAll,
+        ...geoPopulate,
       },
       error: {
         all: [writeAuditLog()],

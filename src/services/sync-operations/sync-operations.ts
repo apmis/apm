@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -25,7 +24,7 @@ export const SyncOperationsDataSchema = Type.Object({
   method: Type.Union([Type.Literal('create'), Type.Literal('patch'), Type.Literal('remove'), Type.Literal('custom')]),
   status: Type.Union([Type.Literal('received'), Type.Literal('applied'), Type.Literal('duplicate'), Type.Literal('conflict'), Type.Literal('rejected'), Type.Literal('failed')]),
   retryCount: Type.Integer(),
-});
+}, { additionalProperties: false });
 
 export const SyncOperationsPatchSchema = Type.Object({
   deviceId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
@@ -34,7 +33,7 @@ export const SyncOperationsPatchSchema = Type.Object({
   method: Type.Optional(Type.Union([Type.Literal('create'), Type.Literal('patch'), Type.Literal('remove'), Type.Literal('custom')])),
   status: Type.Optional(Type.Union([Type.Literal('received'), Type.Literal('applied'), Type.Literal('duplicate'), Type.Literal('conflict'), Type.Literal('rejected'), Type.Literal('failed')])),
   retryCount: Type.Optional(Type.Integer()),
-});
+}, { additionalProperties: false });
 
 export const SyncOperationsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -50,11 +49,13 @@ export type SyncOperationsQuery = Static<typeof SyncOperationsQuerySchema>;
 
 // --- Service ---
 
-export class SyncOperationsService extends MongoDBService<SyncOperations, SyncOperationsData> {}
+export class SyncOperationsService extends MongoDBService<SyncOperations, SyncOperationsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'syncOperations'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('syncOperations')),
   id: '_id',
   disableObjectify: false,
   multi: false,

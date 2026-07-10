@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -31,7 +30,7 @@ export const MediaFilesDataSchema = Type.Object({
   uploadedBy: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   accessLevel: Type.Union([Type.Literal('publicCampaign'), Type.Literal('internal'), Type.Literal('restricted'), Type.Literal('highlyRestricted')]),
   status: Type.Union([Type.Literal('uploading'), Type.Literal('ready'), Type.Literal('quarantined'), Type.Literal('deleted')]),
-});
+}, { additionalProperties: false });
 
 export const MediaFilesPatchSchema = Type.Object({
   objectKey: Type.Optional(Type.String()),
@@ -44,7 +43,7 @@ export const MediaFilesPatchSchema = Type.Object({
   uploadedBy: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   accessLevel: Type.Optional(Type.Union([Type.Literal('publicCampaign'), Type.Literal('internal'), Type.Literal('restricted'), Type.Literal('highlyRestricted')])),
   status: Type.Optional(Type.Union([Type.Literal('uploading'), Type.Literal('ready'), Type.Literal('quarantined'), Type.Literal('deleted')])),
-});
+}, { additionalProperties: false });
 
 export const MediaFilesQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -60,11 +59,13 @@ export type MediaFilesQuery = Static<typeof MediaFilesQuerySchema>;
 
 // --- Service ---
 
-export class MediaFilesService extends MongoDBService<MediaFiles, MediaFilesData> {}
+export class MediaFilesService extends MongoDBService<MediaFiles, MediaFilesData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'mediaFiles'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('mediaFiles')),
   id: '_id',
   disableObjectify: false,
   multi: false,

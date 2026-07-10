@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -22,7 +21,8 @@ export const GeneratedReportsDataSchema = Type.Object({
   parameters: Type.Object({}),
   format: Type.Union([Type.Literal('pdf'), Type.Literal('xlsx'), Type.Literal('csv')]),
   status: Type.Union([Type.Literal('queued'), Type.Literal('processing'), Type.Literal('completed'), Type.Literal('failed'), Type.Literal('expired')]),
-});
+  fileId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
+}, { additionalProperties: false });
 
 export const GeneratedReportsPatchSchema = Type.Object({
   reportType: Type.Optional(Type.String()),
@@ -31,7 +31,7 @@ export const GeneratedReportsPatchSchema = Type.Object({
   format: Type.Optional(Type.Union([Type.Literal('pdf'), Type.Literal('xlsx'), Type.Literal('csv')])),
   status: Type.Optional(Type.Union([Type.Literal('queued'), Type.Literal('processing'), Type.Literal('completed'), Type.Literal('failed'), Type.Literal('expired')])),
   fileId: Type.Optional(Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' }))),
-});
+}, { additionalProperties: false });
 
 export const GeneratedReportsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -47,11 +47,13 @@ export type GeneratedReportsQuery = Static<typeof GeneratedReportsQuerySchema>;
 
 // --- Service ---
 
-export class GeneratedReportsService extends MongoDBService<GeneratedReports, GeneratedReportsData> {}
+export class GeneratedReportsService extends MongoDBService<GeneratedReports, GeneratedReportsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'generatedReports'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('generatedReports')),
   id: '_id',
   disableObjectify: false,
   multi: false,

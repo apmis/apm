@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -12,24 +11,27 @@ export const UserSessionsResultSchema = Type.Object({
   refreshTokenHash: Type.String(),
   deviceId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   ipAddress: Type.Optional(Type.String()),
-  expiresAt: Type.String(),
-  loggedOutAt: Type.Optional(Type.String()),
+  expiresAt: Type.String({ format: 'date-time' }),
+  loggedOutAt: Type.Optional(Type.String({ format: 'date-time' })),
 }, { additionalProperties: false });
 
 export const UserSessionsDataSchema = Type.Object({
   userId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   refreshTokenHash: Type.String(),
-  expiresAt: Type.String(),
-});
+  deviceId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
+  ipAddress: Type.Optional(Type.String()),
+  expiresAt: Type.String({ format: 'date-time' }),
+  loggedOutAt: Type.Optional(Type.String({ format: 'date-time' })),
+}, { additionalProperties: false });
 
 export const UserSessionsPatchSchema = Type.Object({
   userId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   refreshTokenHash: Type.Optional(Type.String()),
   deviceId: Type.Optional(Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' }))),
   ipAddress: Type.Optional(Type.Optional(Type.String())),
-  expiresAt: Type.Optional(Type.String()),
-  loggedOutAt: Type.Optional(Type.Optional(Type.String())),
-});
+  expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
+  loggedOutAt: Type.Optional(Type.Optional(Type.String({ format: 'date-time' }))),
+}, { additionalProperties: false });
 
 export const UserSessionsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -45,11 +47,13 @@ export type UserSessionsQuery = Static<typeof UserSessionsQuerySchema>;
 
 // --- Service ---
 
-export class UserSessionsService extends MongoDBService<UserSessions, UserSessionsData> {}
+export class UserSessionsService extends MongoDBService<UserSessions, UserSessionsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'userSessions'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('userSessions')),
   id: '_id',
   disableObjectify: false,
   multi: false,

@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -25,7 +24,7 @@ export const NotificationsDataSchema = Type.Object({
   priority: Type.Union([Type.Literal('normal'), Type.Literal('high'), Type.Literal('urgent')]),
   channels: Type.Array(Type.Union([Type.Literal('inApp'), Type.Literal('push'), Type.Literal('sms'), Type.Literal('email')])),
   delivery: NotificationDeliverySchema,
-});
+}, { additionalProperties: false });
 
 export const NotificationsPatchSchema = Type.Object({
   recipientUserId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
@@ -35,7 +34,7 @@ export const NotificationsPatchSchema = Type.Object({
   priority: Type.Optional(Type.Union([Type.Literal('normal'), Type.Literal('high'), Type.Literal('urgent')])),
   channels: Type.Optional(Type.Array(Type.Union([Type.Literal('inApp'), Type.Literal('push'), Type.Literal('sms'), Type.Literal('email')]))),
   delivery: Type.Optional(NotificationDeliverySchema),
-});
+}, { additionalProperties: false });
 
 export const NotificationsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -51,11 +50,13 @@ export type NotificationsQuery = Static<typeof NotificationsQuerySchema>;
 
 // --- Service ---
 
-export class NotificationsService extends MongoDBService<Notifications, NotificationsData> {}
+export class NotificationsService extends MongoDBService<Notifications, NotificationsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'notifications'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('notifications')),
   id: '_id',
   disableObjectify: false,
   multi: false,

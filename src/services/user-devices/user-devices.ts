@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -12,24 +11,27 @@ export const UserDevicesResultSchema = Type.Object({
   deviceType: Type.Union([Type.Literal('mobile'), Type.Literal('browser'), Type.Literal('tablet')]),
   deviceName: Type.Optional(Type.String()),
   pushToken: Type.Optional(Type.String()),
-  lastUsedAt: Type.Optional(Type.String()),
+  lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
   isRevoked: Type.Boolean(),
 }, { additionalProperties: false });
 
 export const UserDevicesDataSchema = Type.Object({
   userId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   deviceType: Type.Union([Type.Literal('mobile'), Type.Literal('browser'), Type.Literal('tablet')]),
+  deviceName: Type.Optional(Type.String()),
+  pushToken: Type.Optional(Type.String()),
+  lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
   isRevoked: Type.Boolean(),
-});
+}, { additionalProperties: false });
 
 export const UserDevicesPatchSchema = Type.Object({
   userId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   deviceType: Type.Optional(Type.Union([Type.Literal('mobile'), Type.Literal('browser'), Type.Literal('tablet')])),
   deviceName: Type.Optional(Type.Optional(Type.String())),
   pushToken: Type.Optional(Type.Optional(Type.String())),
-  lastUsedAt: Type.Optional(Type.Optional(Type.String())),
+  lastUsedAt: Type.Optional(Type.Optional(Type.String({ format: 'date-time' }))),
   isRevoked: Type.Optional(Type.Boolean()),
-});
+}, { additionalProperties: false });
 
 export const UserDevicesQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -45,11 +47,13 @@ export type UserDevicesQuery = Static<typeof UserDevicesQuerySchema>;
 
 // --- Service ---
 
-export class UserDevicesService extends MongoDBService<UserDevices, UserDevicesData> {}
+export class UserDevicesService extends MongoDBService<UserDevices, UserDevicesData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'userDevices'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('userDevices')),
   id: '_id',
   disableObjectify: false,
   multi: false,

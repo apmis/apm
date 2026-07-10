@@ -9,6 +9,8 @@ export function applyGeographyScope() {
     const geographyAssignments = (user as Record<string, unknown>).geographyAssignments as
       | Array<{
           scopeLevel: string;
+          stateId?: string;
+          senatorialDistrictId?: string;
           lgaId?: string;
           wardId?: string;
           pollingUnitId?: string;
@@ -24,11 +26,16 @@ export function applyGeographyScope() {
     const geographyFilter: Record<string, unknown>[] = [];
 
     for (const assignment of geographyAssignments) {
-      if (assignment.scopeLevel === 'state') {
+      if (assignment.scopeLevel === 'state' && !assignment.stateId) {
         return context;
       }
       const filter: Record<string, unknown> = {};
-      if (assignment.lgaId) filter['geography.lgaId'] = assignment.lgaId;
+      if (assignment.senatorialDistrictId) {
+        filter['geography.senatorialDistrictId'] = assignment.senatorialDistrictId;
+      }
+      if (assignment.lgaId && !assignment.canViewChildren) {
+        filter['geography.lgaId'] = assignment.lgaId;
+      }
       if (assignment.wardId && !assignment.canViewChildren) {
         filter['geography.wardId'] = assignment.wardId;
       }

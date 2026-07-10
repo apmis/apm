@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -10,6 +9,7 @@ import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, Not
 export const LgasResultSchema = Type.Object({
   name: Type.String(),
   code: Type.String(),
+  stateId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   senatorialDistrictId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   region: Type.Optional(Type.String()),
   displayOrder: Type.Optional(Type.Integer()),
@@ -18,15 +18,20 @@ export const LgasResultSchema = Type.Object({
 export const LgasDataSchema = Type.Object({
   name: Type.String(),
   code: Type.String(),
-});
+  stateId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
+  senatorialDistrictId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
+  region: Type.Optional(Type.String()),
+  displayOrder: Type.Optional(Type.Integer()),
+}, { additionalProperties: false });
 
 export const LgasPatchSchema = Type.Object({
   name: Type.Optional(Type.String()),
   code: Type.Optional(Type.String()),
+  stateId: Type.Optional(Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' }))),
   senatorialDistrictId: Type.Optional(Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' }))),
   region: Type.Optional(Type.Optional(Type.String())),
   displayOrder: Type.Optional(Type.Optional(Type.Integer())),
-});
+}, { additionalProperties: false });
 
 export const LgasQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -42,11 +47,13 @@ export type LgasQuery = Static<typeof LgasQuerySchema>;
 
 // --- Service ---
 
-export class LgasService extends MongoDBService<Lgas, LgasData> {}
+export class LgasService extends MongoDBService<Lgas, LgasData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'lgas'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('lgas')),
   id: '_id',
   disableObjectify: false,
   multi: false,

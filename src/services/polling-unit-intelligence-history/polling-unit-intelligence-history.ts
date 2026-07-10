@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -10,22 +9,23 @@ import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, Not
 export const PollingUnitIntelligenceHistoryResultSchema = Type.Object({
   pollingUnitId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   snapshot: Type.Object({}),
-  assessedAt: Type.String(),
+  assessedAt: Type.String({ format: 'date-time' }),
   assessedBy: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
 }, { additionalProperties: false });
 
 export const PollingUnitIntelligenceHistoryDataSchema = Type.Object({
   pollingUnitId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   snapshot: Type.Object({}),
-  assessedAt: Type.String(),
-});
+  assessedAt: Type.String({ format: 'date-time' }),
+  assessedBy: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
+}, { additionalProperties: false });
 
 export const PollingUnitIntelligenceHistoryPatchSchema = Type.Object({
   pollingUnitId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   snapshot: Type.Optional(Type.Object({})),
-  assessedAt: Type.Optional(Type.String()),
+  assessedAt: Type.Optional(Type.String({ format: 'date-time' })),
   assessedBy: Type.Optional(Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' }))),
-});
+}, { additionalProperties: false });
 
 export const PollingUnitIntelligenceHistoryQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -41,11 +41,13 @@ export type PollingUnitIntelligenceHistoryQuery = Static<typeof PollingUnitIntel
 
 // --- Service ---
 
-export class PollingUnitIntelligenceHistoryService extends MongoDBService<PollingUnitIntelligenceHistory, PollingUnitIntelligenceHistoryData> {}
+export class PollingUnitIntelligenceHistoryService extends MongoDBService<PollingUnitIntelligenceHistory, PollingUnitIntelligenceHistoryData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'pollingUnitIntelligenceHistory'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('pollingUnitIntelligenceHistory')),
   id: '_id',
   disableObjectify: false,
   multi: false,
