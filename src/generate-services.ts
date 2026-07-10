@@ -197,7 +197,7 @@ const SERVICES: ServiceSpec[] = [
     purpose: 'Current campaign assessment for each polling unit.',
     fields: [
       { name: 'pollingUnitId', type: 'ObjectId', required: true, tsType: 'Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' })', description: 'Polling unit' },
-      { name: 'riskLevel', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'green\'), Type.Literal(\'yellow\'), Type.Literal(\'red\'), Type.Literal(\'grey\')])', description: 'Risk level' },
+      { name: 'riskLevel', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'safe\'), Type.Literal(\'moderate\'), Type.Literal(\'dangerous\'), Type.Literal(\'unassessed\')])', description: 'Risk level' },
       { name: 'conversionStatus', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'untouched\'), Type.Literal(\'engaged\'), Type.Literal(\'won\'), Type.Literal(\'lost\')])', description: 'Conversion status' },
       { name: 'pastResultApm', type: 'number', required: false, tsType: 'Type.Optional(Type.Integer())', description: 'APM past result' },
       { name: 'pastResultPdp', type: 'number', required: false, tsType: 'Type.Optional(Type.Integer())', description: 'PDP past result' },
@@ -225,7 +225,7 @@ const SERVICES: ServiceSpec[] = [
       { name: 'wardId', type: 'ObjectId', required: true, tsType: 'Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' })', description: 'Ward' },
       { name: 'assessmentWeek', type: 'string', required: true, tsType: 'Type.String()', description: 'ISO week code' },
       { name: 'score', type: 'number', required: true, tsType: 'Type.Integer({ minimum: 0, maximum: 100 })', description: '0-100 score' },
-      { name: 'status', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'green\'), Type.Literal(\'yellow\'), Type.Literal(\'red\'), Type.Literal(\'grey\')])', description: 'Status' },
+      { name: 'status', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'strong\'), Type.Literal(\'moderate\'), Type.Literal(\'weak\'), Type.Literal(\'unassessed\')])', description: 'Status' },
       { name: 'notes', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Notes' },
     ],
   },

@@ -8,7 +8,7 @@ import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, Not
 
 export const PollingUnitIntelligenceResultSchema = Type.Object({
   pollingUnitId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
-  riskLevel: Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')]),
+  riskLevel: Type.Union([Type.Literal('safe'), Type.Literal('moderate'), Type.Literal('dangerous'), Type.Literal('unassessed')]),
   conversionStatus: Type.Union([Type.Literal('untouched'), Type.Literal('engaged'), Type.Literal('won'), Type.Literal('lost')]),
   pastResultApm: Type.Optional(Type.Integer()),
   pastResultPdp: Type.Optional(Type.Integer()),
@@ -18,7 +18,7 @@ export const PollingUnitIntelligenceResultSchema = Type.Object({
 
 export const PollingUnitIntelligenceDataSchema = Type.Object({
   pollingUnitId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
-  riskLevel: Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')]),
+  riskLevel: Type.Union([Type.Literal('safe'), Type.Literal('moderate'), Type.Literal('dangerous'), Type.Literal('unassessed')]),
   conversionStatus: Type.Union([Type.Literal('untouched'), Type.Literal('engaged'), Type.Literal('won'), Type.Literal('lost')]),
   pastResultApm: Type.Optional(Type.Integer()),
   pastResultPdp: Type.Optional(Type.Integer()),
@@ -28,7 +28,7 @@ export const PollingUnitIntelligenceDataSchema = Type.Object({
 
 export const PollingUnitIntelligencePatchSchema = Type.Object({
   pollingUnitId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
-  riskLevel: Type.Optional(Type.Union([Type.Literal('green'), Type.Literal('yellow'), Type.Literal('red'), Type.Literal('grey')])),
+  riskLevel: Type.Optional(Type.Union([Type.Literal('safe'), Type.Literal('moderate'), Type.Literal('dangerous'), Type.Literal('unassessed')])),
   conversionStatus: Type.Optional(Type.Union([Type.Literal('untouched'), Type.Literal('engaged'), Type.Literal('won'), Type.Literal('lost')])),
   pastResultApm: Type.Optional(Type.Optional(Type.Integer())),
   pastResultPdp: Type.Optional(Type.Optional(Type.Integer())),

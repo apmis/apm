@@ -376,7 +376,7 @@ async function seed() {
     wardId: ward._id.toString(),
     assessmentWeek: "2026-W25",
     score: Math.floor(Math.random() * 60) + 20,
-    status: ["green", "yellow", "red", "grey"][i % 4],
+    status: ["strong", "moderate", "weak", "unassessed"][i % 4],
     ...base,
   }));
   await db.collection("wardConversionAssessments").insertMany(wcaDocs);
