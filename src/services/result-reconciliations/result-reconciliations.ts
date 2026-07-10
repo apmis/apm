@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -23,7 +22,7 @@ export const ResultReconciliationsDataSchema = Type.Object({
   sourceType: Type.Union([Type.Literal('campaignAggregate'), Type.Literal('officialAnnouncement'), Type.Literal('legalDocument'), Type.Literal('other')]),
   partyTotals: Type.Array(PartyResultSchema),
   status: Type.Union([Type.Literal('pending'), Type.Literal('matched'), Type.Literal('discrepancy'), Type.Literal('resolved')]),
-});
+}, { additionalProperties: false });
 
 export const ResultReconciliationsPatchSchema = Type.Object({
   electionCode: Type.Optional(Type.String()),
@@ -32,7 +31,7 @@ export const ResultReconciliationsPatchSchema = Type.Object({
   sourceType: Type.Optional(Type.Union([Type.Literal('campaignAggregate'), Type.Literal('officialAnnouncement'), Type.Literal('legalDocument'), Type.Literal('other')])),
   partyTotals: Type.Optional(Type.Array(PartyResultSchema)),
   status: Type.Optional(Type.Union([Type.Literal('pending'), Type.Literal('matched'), Type.Literal('discrepancy'), Type.Literal('resolved')])),
-});
+}, { additionalProperties: false });
 
 export const ResultReconciliationsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -48,11 +47,13 @@ export type ResultReconciliationsQuery = Static<typeof ResultReconciliationsQuer
 
 // --- Service ---
 
-export class ResultReconciliationsService extends MongoDBService<ResultReconciliations, ResultReconciliationsData> {}
+export class ResultReconciliationsService extends MongoDBService<ResultReconciliations, ResultReconciliationsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'resultReconciliations'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('resultReconciliations')),
   id: '_id',
   disableObjectify: false,
   multi: false,

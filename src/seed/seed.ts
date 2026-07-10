@@ -275,7 +275,9 @@ async function seed() {
     { code: "SAW", name: "Saki West", region: "Oyo", displayOrder: 31 },
     { code: "SUR", name: "Surulere", region: "Oyo", displayOrder: 32 },
   ];
-  const lgaDocs = lgas.map((l) => ({ ...l, ...base }));
+  const oyoState = await db.collection("states").findOne({ code: "OY" });
+  const oyoStateId = oyoState?._id?.toString() || "";
+  const lgaDocs = lgas.map((l) => ({ ...l, stateId: oyoStateId, ...base }));
   await db.collection("lgas").insertMany(lgaDocs);
   console.log(`Seeded ${lgas.length} LGAs`);
 
@@ -805,10 +807,12 @@ async function seed() {
   console.log(`Seeded ${settingsDocs.length} system settings`);
 
   // --- Senatorial Districts ---
+  const oyoStateForDist = await db.collection("states").findOne({ code: "OY" });
+  const oyoStateIdForDist = oyoStateForDist?._id?.toString() || "";
   const distDocs = [
-    { code: "OYO-C", name: "Oyo Central", region: "Central", displayOrder: 0 },
-    { code: "OYO-N", name: "Oyo North", region: "North", displayOrder: 1 },
-    { code: "OYO-S", name: "Oyo South", region: "South", displayOrder: 2 },
+    { code: "OYO-C", name: "Oyo Central", region: "Central", displayOrder: 0, stateId: oyoStateIdForDist },
+    { code: "OYO-N", name: "Oyo North", region: "North", displayOrder: 1, stateId: oyoStateIdForDist },
+    { code: "OYO-S", name: "Oyo South", region: "South", displayOrder: 2, stateId: oyoStateIdForDist },
   ];
   await db
     .collection("senatorialDistricts")

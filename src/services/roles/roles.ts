@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -19,10 +18,11 @@ export const RolesResultSchema = Type.Object({
 export const RolesDataSchema = Type.Object({
   code: Type.String(),
   name: Type.String(),
+  description: Type.Optional(Type.String()),
   permissionCodes: Type.Array(Type.String()),
   isSystemRole: Type.Boolean(),
   status: Type.Union([Type.Literal('active'), Type.Literal('inactive')]),
-});
+}, { additionalProperties: false });
 
 export const RolesPatchSchema = Type.Object({
   code: Type.Optional(Type.String()),
@@ -31,7 +31,7 @@ export const RolesPatchSchema = Type.Object({
   permissionCodes: Type.Optional(Type.Array(Type.String())),
   isSystemRole: Type.Optional(Type.Boolean()),
   status: Type.Optional(Type.Union([Type.Literal('active'), Type.Literal('inactive')])),
-});
+}, { additionalProperties: false });
 
 export const RolesQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -47,11 +47,13 @@ export type RolesQuery = Static<typeof RolesQuerySchema>;
 
 // --- Service ---
 
-export class RolesService extends MongoDBService<Roles, RolesData> {}
+export class RolesService extends MongoDBService<Roles, RolesData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'roles'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('roles')),
   id: '_id',
   disableObjectify: false,
   multi: false,

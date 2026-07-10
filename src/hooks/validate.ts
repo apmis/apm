@@ -1,6 +1,9 @@
 import type { HookContext } from '@feathersjs/feathers';
 import type { TSchema } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
+import { FormatRegistry } from '@sinclair/typebox';
+
+FormatRegistry.Set('date-time', (value: string) => !isNaN(Date.parse(value)));
 
 export function validateQuery(schema: TSchema) {
   return async (context: HookContext) => {

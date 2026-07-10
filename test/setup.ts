@@ -119,7 +119,8 @@ export async function setupTestEnvironment(): Promise<void> {
 
 export async function teardownTestEnvironment(): Promise<void> {
   if (server) await new Promise<void>((resolve) => server.close(() => resolve()));
-  await app?.get('mongodbClient')?.close();
+  const mongoClient = await app?.get('mongodbClient');
+  if (mongoClient) await mongoClient.close();
   if (replSet) await replSet.stop();
 }
 

@@ -1,6 +1,5 @@
 import { MongoClient } from 'mongodb';
 import type { Application } from '@feathersjs/feathers';
-import type { AppConfiguration } from './configuration.js';
 
 const clientPromiseMap = new WeakMap<Application, Promise<MongoClient>>();
 
@@ -22,8 +21,8 @@ export async function configureMongoDB(app: Application) {
   clientPromiseMap.set(app, connectPromise);
 
   const db = client.db();
-  (app as unknown as AppConfiguration).database = db;
-  (app as unknown as AppConfiguration).mongodbClient = connectPromise;
+  app.set('mongodbClient', connectPromise);
+  app.set('database', db);
 
   console.log('Connected to MongoDB:', uri);
 

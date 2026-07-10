@@ -3,6 +3,7 @@ import { koa, rest, bodyParser, errorHandler, serveStatic, cors } from '@feather
 import socketio from '@feathersjs/socketio';
 import configuration from '@feathersjs/configuration';
 import swaggerModule from 'feathers-swagger';
+import { http } from '@feathersjs/transport-commons';
 const swagger = swaggerModule;
 
 import { configureMongoDB } from './mongodb.js';
@@ -21,6 +22,23 @@ export async function createApp(overrides?: Record<string, unknown>) {
 const serverUrl = isProduction 
   ? 'https://apm-jbpi.onrender.com' 
   : `http://localhost:${app.get('port')}`;
+
+  // Register argument mapping for custom REST methods
+  http.argumentsFor.setupPermissions = ({ id, data, params }: any) => [id, data, params];
+
+  app.use(async (ctx, next) => {
+    ctx.feathers = { ...ctx.feathers, app: ctx.app };
+    const path = ctx.request.path;
+    const match = path.match(/^(\/apm\/\w+)\/([^/]+)\/(\w+)$/);
+    if (match) {
+      ctx.request.path = `${match[1]}/${match[2]}`;
+      ctx.request.headers['x-service-method'] = match[3];
+    }
+    await next();
+    if (match && ctx.response.status < 400) {
+      ctx.response.status = 201;
+    }
+  });
 
   const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com'];
   const corsOptions = {

@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -23,7 +22,7 @@ export const DataExportsDataSchema = Type.Object({
   sensitivity: Type.Union([Type.Literal('internal'), Type.Literal('restricted'), Type.Literal('highlyRestricted')]),
   approvalStatus: Type.Union([Type.Literal('pending'), Type.Literal('approved'), Type.Literal('rejected'), Type.Literal('expired')]),
   status: Type.Union([Type.Literal('requested'), Type.Literal('generating'), Type.Literal('ready'), Type.Literal('failed'), Type.Literal('expired'), Type.Literal('revoked')]),
-});
+}, { additionalProperties: false });
 
 export const DataExportsPatchSchema = Type.Object({
   requestedBy: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
@@ -32,7 +31,7 @@ export const DataExportsPatchSchema = Type.Object({
   sensitivity: Type.Optional(Type.Union([Type.Literal('internal'), Type.Literal('restricted'), Type.Literal('highlyRestricted')])),
   approvalStatus: Type.Optional(Type.Union([Type.Literal('pending'), Type.Literal('approved'), Type.Literal('rejected'), Type.Literal('expired')])),
   status: Type.Optional(Type.Union([Type.Literal('requested'), Type.Literal('generating'), Type.Literal('ready'), Type.Literal('failed'), Type.Literal('expired'), Type.Literal('revoked')])),
-});
+}, { additionalProperties: false });
 
 export const DataExportsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -48,11 +47,13 @@ export type DataExportsQuery = Static<typeof DataExportsQuerySchema>;
 
 // --- Service ---
 
-export class DataExportsService extends MongoDBService<DataExports, DataExportsData> {}
+export class DataExportsService extends MongoDBService<DataExports, DataExportsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'dataExports'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('dataExports')),
   id: '_id',
   disableObjectify: false,
   multi: false,

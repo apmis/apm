@@ -16,25 +16,35 @@ interface ServiceSpec {
   collectionName: string;
   purpose: string;
   isAppendOnly?: boolean;
+  isHandWritten?: boolean;
+  customMethods?: string[];
   fields: ServiceField[];
 }
 
 const SERVICES: ServiceSpec[] = [
   // 7. Identity and Access
   {
+    servicePath: 'auth',
+    collectionName: '',
+    purpose: 'Multi-method authentication service (hand-written).',
+    isHandWritten: true,
+    fields: [],
+  },
+  {
     servicePath: 'users',
     collectionName: 'users',
     purpose: 'Stores all web and mobile identities, authentication profile, account state, and safe public profile data.',
+    customMethods: ['setupPermissions'],
     fields: [
-      { name: 'firstName', type: 'string', required: true, tsType: 'Type.String()', description: 'First name' },
-      { name: 'lastName', type: 'string', required: true, tsType: 'Type.String()', description: 'Surname' },
-      { name: 'phoneNumber', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Normalised phone' },
-      { name: 'email', type: 'string', required: false, tsType: 'Type.Optional(Type.String({ format: \'email\' }))', description: 'Email' },
+      { name: 'name', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Display name' },
+      { name: 'email', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Email' },
       { name: 'password', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'bcrypt hash' },
+      { name: 'phoneNumber', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Normalised phone' },
+      { name: 'permissions', type: 'string[]', required: false, tsType: 'Type.Optional(Type.Array(Type.String()))', description: 'Permission codes' },
       { name: 'primaryRoleCode', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Display role' },
-      { name: 'accountStatus', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'invited\'), Type.Literal(\'active\'), Type.Literal(\'suspended\'), Type.Literal(\'disabled\'), Type.Literal(\'locked\')])', description: 'Account status' },
-      { name: 'isPhoneVerified', type: 'boolean', required: true, tsType: 'Type.Boolean()', description: 'Phone verified' },
-      { name: 'isEmailVerified', type: 'boolean', required: true, tsType: 'Type.Boolean()', description: 'Email verified' },
+      { name: 'accountStatus', type: 'string', required: false, tsType: 'Type.Optional(Type.Union([Type.Literal(\'invited\'), Type.Literal(\'active\'), Type.Literal(\'suspended\'), Type.Literal(\'disabled\'), Type.Literal(\'locked\')]))', description: 'Account status' },
+      { name: 'isPhoneVerified', type: 'boolean', required: false, tsType: 'Type.Optional(Type.Boolean())', description: 'Phone verified' },
+      { name: 'isEmailVerified', type: 'boolean', required: false, tsType: 'Type.Optional(Type.Boolean())', description: 'Email verified' },
     ],
   },
   {
@@ -83,6 +93,7 @@ const SERVICES: ServiceSpec[] = [
     fields: [
       { name: 'userId', type: 'ObjectId', required: true, tsType: 'Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' })', description: 'User reference' },
       { name: 'scopeLevel', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'state\'), Type.Literal(\'senatorialDistrict\'), Type.Literal(\'lga\'), Type.Literal(\'ward\'), Type.Literal(\'pollingUnit\')])', description: 'Scope level' },
+      { name: 'stateId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'State' },
       { name: 'senatorialDistrictId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'District' },
       { name: 'lgaId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'LGA' },
       { name: 'wardId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'Ward' },
@@ -121,12 +132,23 @@ const SERVICES: ServiceSpec[] = [
   },
   // 8. Electoral Geography
   {
+    servicePath: 'states',
+    collectionName: 'states',
+    purpose: 'Stores the 37 Nigerian states plus FCT.',
+    fields: [
+      { name: 'name', type: 'string', required: true, tsType: 'Type.String()', description: 'State name' },
+      { name: 'code', type: 'string', required: true, tsType: 'Type.String()', description: 'State code' },
+      { name: 'displayOrder', type: 'number', required: false, tsType: 'Type.Optional(Type.Integer())', description: 'Sort order' },
+    ],
+  },
+  {
     servicePath: 'senatorial-districts',
     collectionName: 'senatorialDistricts',
     purpose: 'Stores the senatorial districts used by the campaign geography hierarchy.',
     fields: [
       { name: 'name', type: 'string', required: true, tsType: 'Type.String()', description: 'District name' },
       { name: 'code', type: 'string', required: true, tsType: 'Type.String()', description: 'District code' },
+      { name: 'stateId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'Parent state' },
       { name: 'region', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Region' },
       { name: 'displayOrder', type: 'number', required: false, tsType: 'Type.Optional(Type.Integer())', description: 'Sort order' },
     ],
@@ -138,6 +160,7 @@ const SERVICES: ServiceSpec[] = [
     fields: [
       { name: 'name', type: 'string', required: true, tsType: 'Type.String()', description: 'LGA name' },
       { name: 'code', type: 'string', required: true, tsType: 'Type.String()', description: 'LGA code' },
+      { name: 'stateId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'Parent state' },
       { name: 'senatorialDistrictId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'Parent district' },
       { name: 'region', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Region' },
       { name: 'displayOrder', type: 'number', required: false, tsType: 'Type.Optional(Type.Integer())', description: 'Sort order' },
@@ -251,6 +274,24 @@ const SERVICES: ServiceSpec[] = [
       { name: 'status', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'planned\'), Type.Literal(\'inProgress\'), Type.Literal(\'completed\'), Type.Literal(\'cancelled\')])', description: 'Status' },
       { name: 'scheduledDate', type: 'Date', required: false, tsType: 'Type.Optional(Type.String({ format: \'date-time\' }))', description: 'Scheduled' },
       { name: 'visitSummaries', type: 'array', required: false, tsType: 'Type.Optional(Type.Array(Type.Object({ name: Type.String(), phone: Type.Optional(Type.String()), supportLevel: Type.Optional(Type.String()), outcome: Type.Optional(Type.String()) })))', description: 'Visit summaries' },
+    ],
+  },
+  {
+    servicePath: 'voter-contacts',
+    collectionName: 'voterContacts',
+    purpose: 'Tracks individual voter contacts made during canvassing.',
+    fields: [
+      { name: 'pollingUnitId', type: 'ObjectId', required: true, tsType: 'Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' })', description: 'Polling unit' },
+      { name: 'contactDate', type: 'Date', required: true, tsType: 'Type.String({ format: \'date-time\' })', description: 'Contact date' },
+      { name: 'voterName', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Voter name' },
+      { name: 'voterPhone', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Voter phone' },
+      { name: 'supportLevel', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'STRONG_SUPPORT\'), Type.Literal(\'LEANING_SUPPORT\'), Type.Literal(\'UNDECIDED\'), Type.Literal(\'LEANING_OPPOSITION\'), Type.Literal(\'STRONG_OPPOSITION\')])', description: 'Support level' },
+      { name: 'concerns', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Concerns' },
+      { name: 'issues', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Issues' },
+      { name: 'reportedById', type: 'ObjectId', required: true, tsType: 'Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' })', description: 'Reporter' },
+      { name: 'verified', type: 'boolean', required: true, tsType: 'Type.Boolean()', description: 'Verified flag' },
+      { name: 'verifiedById', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'Verifier' },
+      { name: 'notes', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Notes' },
     ],
   },
   {
@@ -578,7 +619,8 @@ const SERVICES: ServiceSpec[] = [
       { name: 'rejectedVotes', type: 'number', required: true, tsType: 'Type.Integer()', description: 'Rejected votes' },
       { name: 'totalValidVotes', type: 'number', required: true, tsType: 'Type.Integer()', description: 'Total valid votes' },
       { name: 'totalVotesCast', type: 'number', required: true, tsType: 'Type.Integer()', description: 'Total votes cast' },
-      { name: 'resultSheetMediaId', type: 'ObjectId', required: true, tsType: 'Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' })', description: 'Result sheet media' },
+      { name: 'resultSheetMediaId', type: 'ObjectId', required: false, tsType: 'Type.Optional(Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' }))', description: 'Result sheet media' },
+      { name: 'resultSheetBase64', type: 'string', required: false, tsType: 'Type.Optional(Type.String())', description: 'Result sheet image (base64)' },
       { name: 'submittedBy', type: 'ObjectId', required: true, tsType: 'Type.String({ pattern: \'^[a-fA-F0-9]{24}$\' })', description: 'Submitter' },
       { name: 'validation', type: 'object', required: true, tsType: 'ResultValidationSchema', description: 'Validation state' },
       { name: 'verificationStatus', type: 'string', required: true, tsType: 'Type.Union([Type.Literal(\'pending\'), Type.Literal(\'verified\'), Type.Literal(\'rejected\'), Type.Literal(\'disputed\'), Type.Literal(\'superseded\')])', description: 'Verification status' },
@@ -755,7 +797,6 @@ function generateService(service: ServiceSpec): string {
     .join('\n');
 
   const createFields = service.fields
-    .filter((f) => f.required || f.name === 'clientSubmissionId')
     .map((f) => `  ${f.name}: ${f.tsType},`)
     .join('\n');
 
@@ -798,7 +839,25 @@ export type ${schemaClassName}Query = Static<typeof ${schemaClassName}QuerySchem
 
 // --- Service ---
 
-export class ${className} extends MongoDBService<${schemaClassName}, ${schemaClassName}Data> {}
+export class ${className} extends MongoDBService<${schemaClassName}, ${schemaClassName}Data> {
+${service.servicePath === 'users' ? `  async setupPermissions(id: string, data: any, params: any, context?: any) {
+    const { permissions, geographyAssignments } = data;
+    const patchData: Record<string, unknown> = {};
+    if (permissions) patchData.permissions = permissions;
+    patchData.accountStatus = 'active';
+    await (this as any).patch(id, patchData, params);
+    if (geographyAssignments?.length) {
+      const gaService = params.app?.service('apm/geography-assignments');
+      if (gaService) {
+        for (const assignment of geographyAssignments) {
+          await gaService.create({ userId: id, ...assignment }, params);
+        }
+      }
+    }
+    const result = await (this as any).get(id, params);
+    return result;
+  }` : ''}
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
@@ -820,8 +879,23 @@ function generateIndexFile(): string {
     const className = capitalize(service.servicePath) + 'Service';
     const importPath = `./${service.servicePath}/${service.servicePath}.js`;
 
-    imports += `import { ${className}, getOptions as ${capitalize(service.servicePath)}Options } from '${importPath}';\n`;
-    useLines += `  app.use('/${service.servicePath}', new ${className}(${capitalize(service.servicePath)}Options(app)));\n`;
+    let additional = '';
+    if (service.isHandWritten) {
+      imports += `import { ${className} } from '${importPath}';\n`;
+      useLines += `  app.use('/apm/${service.servicePath}', new ${className}(app));\n`;
+    } else if (service.customMethods?.length) {
+      const methodsList = "'" + ['find','get','create','update','patch','remove', ...service.customMethods].join("', '") + "'";
+      imports += `import { ${className}, getOptions as ${capitalize(service.servicePath)}Options } from '${importPath}';\n`;
+      useLines += `  app.use('/apm/${service.servicePath}', new ${className}(${capitalize(service.servicePath)}Options(app)), { methods: [${methodsList}] });\n`;
+    } else {
+      imports += `import { ${className}, getOptions as ${capitalize(service.servicePath)}Options } from '${importPath}';\n`;
+      useLines += `  app.use('/apm/${service.servicePath}', new ${className}(${capitalize(service.servicePath)}Options(app)));\n`;
+    }
+
+    for (const cm of (service as any).customMethods || []) {
+      additional += `  app.routes.insert('/apm/${service.servicePath}/:__id/${cm}', { service: app.service('apm/${service.servicePath}'), params: {} });\n`;
+    }
+    useLines += additional;
   }
 
   return `import type { Application } from '@feathersjs/feathers';
@@ -834,6 +908,10 @@ ${useLines}}
 
 // Generate all service files
 for (const service of SERVICES) {
+  if (service.isHandWritten) {
+    console.log(`Skipped (hand-written): ${service.servicePath}/${service.servicePath}.ts`);
+    continue;
+  }
   const dirPath = join(SERVICES_DIR, service.servicePath);
   if (!existsSync(dirPath)) {
     mkdirSync(dirPath, { recursive: true });

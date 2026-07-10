@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -22,9 +21,14 @@ export const RapidResponseIssuesResultSchema = Type.Object({
 export const RapidResponseIssuesDataSchema = Type.Object({
   platform: Type.Union([Type.Literal('facebook'), Type.Literal('whatsapp'), Type.Literal('twitter'), Type.Literal('tiktok'), Type.Literal('instagram'), Type.Literal('radio'), Type.Literal('print'), Type.Literal('other')]),
   title: Type.String(),
+  content: Type.Optional(Type.String()),
+  mentionUrl: Type.Optional(Type.String()),
+  sentiment: Type.Optional(Type.String()),
+  reach: Type.Optional(Type.Integer()),
   isUrgent: Type.Boolean(),
   status: Type.Union([Type.Literal('new'), Type.Literal('investigating'), Type.Literal('responded'), Type.Literal('resolved'), Type.Literal('monitoring')]),
-});
+  geography: Type.Optional(GeographySnapshotSchema),
+}, { additionalProperties: false });
 
 export const RapidResponseIssuesPatchSchema = Type.Object({
   platform: Type.Optional(Type.Union([Type.Literal('facebook'), Type.Literal('whatsapp'), Type.Literal('twitter'), Type.Literal('tiktok'), Type.Literal('instagram'), Type.Literal('radio'), Type.Literal('print'), Type.Literal('other')])),
@@ -36,7 +40,7 @@ export const RapidResponseIssuesPatchSchema = Type.Object({
   isUrgent: Type.Optional(Type.Boolean()),
   status: Type.Optional(Type.Union([Type.Literal('new'), Type.Literal('investigating'), Type.Literal('responded'), Type.Literal('resolved'), Type.Literal('monitoring')])),
   geography: Type.Optional(Type.Optional(GeographySnapshotSchema)),
-});
+}, { additionalProperties: false });
 
 export const RapidResponseIssuesQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -52,11 +56,13 @@ export type RapidResponseIssuesQuery = Static<typeof RapidResponseIssuesQuerySch
 
 // --- Service ---
 
-export class RapidResponseIssuesService extends MongoDBService<RapidResponseIssues, RapidResponseIssuesData> {}
+export class RapidResponseIssuesService extends MongoDBService<RapidResponseIssues, RapidResponseIssuesData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'rapidResponseIssues'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('rapidResponseIssues')),
   id: '_id',
   disableObjectify: false,
   multi: false,

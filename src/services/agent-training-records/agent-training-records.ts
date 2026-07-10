@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -10,7 +9,7 @@ import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, Not
 export const AgentTrainingRecordsResultSchema = Type.Object({
   agentId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   trainingCode: Type.String(),
-  sessionAt: Type.String(),
+  sessionAt: Type.String({ format: 'date-time' }),
   attendanceStatus: Type.Union([Type.Literal('registered'), Type.Literal('attended'), Type.Literal('absent'), Type.Literal('excused')]),
   assessmentScore: Type.Optional(Type.Integer({ minimum: 0, maximum: 100 })),
   completed: Type.Boolean(),
@@ -20,20 +19,22 @@ export const AgentTrainingRecordsResultSchema = Type.Object({
 export const AgentTrainingRecordsDataSchema = Type.Object({
   agentId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   trainingCode: Type.String(),
-  sessionAt: Type.String(),
+  sessionAt: Type.String({ format: 'date-time' }),
   attendanceStatus: Type.Union([Type.Literal('registered'), Type.Literal('attended'), Type.Literal('absent'), Type.Literal('excused')]),
+  assessmentScore: Type.Optional(Type.Integer({ minimum: 0, maximum: 100 })),
   completed: Type.Boolean(),
-});
+  trainerId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
+}, { additionalProperties: false });
 
 export const AgentTrainingRecordsPatchSchema = Type.Object({
   agentId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   trainingCode: Type.Optional(Type.String()),
-  sessionAt: Type.Optional(Type.String()),
+  sessionAt: Type.Optional(Type.String({ format: 'date-time' })),
   attendanceStatus: Type.Optional(Type.Union([Type.Literal('registered'), Type.Literal('attended'), Type.Literal('absent'), Type.Literal('excused')])),
   assessmentScore: Type.Optional(Type.Optional(Type.Integer({ minimum: 0, maximum: 100 }))),
   completed: Type.Optional(Type.Boolean()),
   trainerId: Type.Optional(Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' }))),
-});
+}, { additionalProperties: false });
 
 export const AgentTrainingRecordsQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -49,11 +50,13 @@ export type AgentTrainingRecordsQuery = Static<typeof AgentTrainingRecordsQueryS
 
 // --- Service ---
 
-export class AgentTrainingRecordsService extends MongoDBService<AgentTrainingRecords, AgentTrainingRecordsData> {}
+export class AgentTrainingRecordsService extends MongoDBService<AgentTrainingRecords, AgentTrainingRecordsData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'agentTrainingRecords'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('agentTrainingRecords')),
   id: '_id',
   disableObjectify: false,
   multi: false,

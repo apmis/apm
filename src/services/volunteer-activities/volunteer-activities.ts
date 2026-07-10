@@ -2,7 +2,6 @@ import { Type, type Static } from '@sinclair/typebox';
 import { MongoDBService } from '@feathersjs/mongodb';
 import type { MongoDBAdapterOptions } from '@feathersjs/mongodb';
 import type { Application } from '@feathersjs/feathers';
-import { getCollection } from '../../mongodb.js';
 import { GeographySnapshotSchema, PartyResultSchema, ResultValidationSchema, NotificationDeliverySchema, ConsentRecordSchema } from '../../validators/shared.js';
 
 // --- Schemas ---
@@ -12,22 +11,24 @@ export const VolunteerActivitiesResultSchema = Type.Object({
   activityType: Type.String(),
   description: Type.Optional(Type.String()),
   durationHours: Type.Optional(Type.Number()),
-  completedAt: Type.String(),
+  completedAt: Type.String({ format: 'date-time' }),
 }, { additionalProperties: false });
 
 export const VolunteerActivitiesDataSchema = Type.Object({
   volunteerId: Type.String({ pattern: '^[a-fA-F0-9]{24}$' }),
   activityType: Type.String(),
-  completedAt: Type.String(),
-});
+  description: Type.Optional(Type.String()),
+  durationHours: Type.Optional(Type.Number()),
+  completedAt: Type.String({ format: 'date-time' }),
+}, { additionalProperties: false });
 
 export const VolunteerActivitiesPatchSchema = Type.Object({
   volunteerId: Type.Optional(Type.String({ pattern: '^[a-fA-F0-9]{24}$' })),
   activityType: Type.Optional(Type.String()),
   description: Type.Optional(Type.Optional(Type.String())),
   durationHours: Type.Optional(Type.Optional(Type.Number())),
-  completedAt: Type.Optional(Type.String()),
-});
+  completedAt: Type.Optional(Type.String({ format: 'date-time' })),
+}, { additionalProperties: false });
 
 export const VolunteerActivitiesQuerySchema = Type.Object({
   $skip: Type.Optional(Type.Integer()),
@@ -43,11 +44,13 @@ export type VolunteerActivitiesQuery = Static<typeof VolunteerActivitiesQuerySch
 
 // --- Service ---
 
-export class VolunteerActivitiesService extends MongoDBService<VolunteerActivities, VolunteerActivitiesData> {}
+export class VolunteerActivitiesService extends MongoDBService<VolunteerActivities, VolunteerActivitiesData> {
+
+}
 
 export const getOptions = (app: Application): MongoDBAdapterOptions => ({
   paginate: app.get('paginate'),
-  Model: getCollection(app, 'volunteerActivities'),
+  Model: app.get('mongodbClient').then((client: any) => client.db().collection('volunteerActivities')),
   id: '_id',
   disableObjectify: false,
   multi: false,
