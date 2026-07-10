@@ -239,10 +239,14 @@ export class AuthService {
         { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
       );
 
-      await sendSms(
-        user.phoneNumber,
-        `Your APM Campaign verification code is: ${otp}. It expires in 10 minutes.`,
-      );
+      try {
+        await sendSms(
+          user.phoneNumber,
+          `Your APM Campaign verification code is: ${otp}. It expires in 10 minutes.`,
+        );
+      } catch (err) {
+        console.error("[auth] Failed to send phone verification SMS:", err);
+      }
 
       const challengeToken = await createChallengeToken(user._id.toString());
       return {
@@ -293,10 +297,14 @@ export class AuthService {
           { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
         );
 
-        await sendSms(
-          user.phoneNumber,
-          `Your APM Campaign 2FA code is: ${otp}. It expires in 10 minutes.`,
-        );
+        try {
+          await sendSms(
+            user.phoneNumber,
+            `Your APM Campaign 2FA code is: ${otp}. It expires in 10 minutes.`,
+          );
+        } catch (err) {
+          console.error("[auth] Failed to send 2FA SMS:", err);
+        }
       }
 
       return {
@@ -399,10 +407,14 @@ export class AuthService {
     });
 
     if (data.phone) {
-      await sendSms(
-        data.phone,
-        `Welcome to APM Campaign, ${data.name}! Your phone verification code is: ${phoneOtp}. It expires in 10 minutes.`,
-      );
+      try {
+        await sendSms(
+          data.phone,
+          `Welcome to APM Campaign, ${data.name}! Your phone verification code is: ${phoneOtp}. It expires in 10 minutes.`,
+        );
+      } catch (err) {
+        console.error("[auth] Failed to send registration SMS:", err);
+      }
     }
 
     return { success: true };
@@ -557,10 +569,14 @@ export class AuthService {
         },
       );
 
-      await sendSms(
-        user.phoneNumber,
-        `Your APM Campaign 2FA setup code is: ${otp}. It expires in 10 minutes.`,
-      );
+      try {
+        await sendSms(
+          user.phoneNumber,
+          `Your APM Campaign 2FA setup code is: ${otp}. It expires in 10 minutes.`,
+        );
+      } catch (err) {
+        console.error("[auth] Failed to send 2FA setup SMS:", err);
+      }
 
       return { success: true, enabled: false, method: "phone" };
     }
@@ -862,12 +878,14 @@ export class AuthService {
       { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
     );
 
-    console.log(`Sending phone OTP to ${data.phone}: ${otp}`); // For debugging purposes
-
-    await sendSms(
-      data.phone,
-      `Your APM Campaign phone verification code is: ${otp}. It expires in 10 minutes.`,
-    );
+    try {
+      await sendSms(
+        data.phone,
+        `Your APM Campaign phone verification code is: ${otp}. It expires in 10 minutes.`,
+      );
+    } catch (err) {
+      console.error("[auth] Failed to send phone OTP SMS:", err);
+    }
 
     return { success: true };
   }
@@ -961,10 +979,14 @@ export class AuthService {
       { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
     );
 
-    await sendSms(
-      user.phoneNumber,
-      `Your APM Campaign verification code is: ${otp}. It expires in 10 minutes.`,
-    );
+    try {
+      await sendSms(
+        user.phoneNumber,
+        `Your APM Campaign verification code is: ${otp}. It expires in 10 minutes.`,
+      );
+    } catch (err) {
+      console.error("[auth] Failed to resend phone OTP SMS:", err);
+    }
 
     return { success: true };
   }
