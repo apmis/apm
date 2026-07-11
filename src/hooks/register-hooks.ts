@@ -63,6 +63,7 @@ import { DataExportsResultSchema, DataExportsDataSchema, DataExportsPatchSchema,
 import { SystemSettingsResultSchema, SystemSettingsDataSchema, SystemSettingsPatchSchema, SystemSettingsQuerySchema } from '../services/system-settings/system-settings.js';
 import { StatesResultSchema, StatesDataSchema, StatesPatchSchema, StatesQuerySchema } from '../services/states/states.js';
 import { VoterContactsResultSchema, VoterContactsDataSchema, VoterContactsPatchSchema, VoterContactsQuerySchema } from '../services/voter-contacts/voter-contacts.js';
+import { NavMenusResultSchema, NavMenusDataSchema, NavMenusPatchSchema, NavMenusQuerySchema } from '../services/nav-menus/nav-menus.js';
 
 type ServiceConfig = {
   path: string;
@@ -141,6 +142,7 @@ export function registerHooks(app: Application) {
     { path: 'apm/system-settings', querySchema: SystemSettingsQuerySchema, dataSchema: SystemSettingsDataSchema, patchSchema: SystemSettingsPatchSchema },
     { path: 'apm/states', querySchema: StatesQuerySchema, dataSchema: StatesDataSchema, patchSchema: StatesPatchSchema, publicRead: true },
     { path: 'apm/voter-contacts', querySchema: VoterContactsQuerySchema, dataSchema: VoterContactsDataSchema, patchSchema: VoterContactsPatchSchema },
+    { path: 'apm/nav-menus', querySchema: NavMenusQuerySchema, dataSchema: NavMenusDataSchema, patchSchema: NavMenusPatchSchema, authenticatedRead: true },
   ];
 
   const CUSTOM_METHOD_PATHS = new Set([
