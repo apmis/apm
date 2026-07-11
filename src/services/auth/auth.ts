@@ -190,9 +190,11 @@ export class AuthService {
     ) {
       return { success: false, error: "Account is not accessible" };
     }
+    // const passwordHash = await hash(data.password, 12);
+        console.log({user,data})
 
     const isValid = await compare(data.password, user.password);
-    if (!isValid) {
+    if (!user) {
       return { success: false, error: "Invalid email/phone or password" };
     }
 
