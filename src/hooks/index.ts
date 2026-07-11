@@ -10,3 +10,4 @@ export { publishByScope } from './publish-by-scope.js';
 export { validateQuery, validateData } from './validate.js';
 export { syncRolePermissions } from './sync-role-permissions.js';
 export { populateGeography } from './populate-geography.js';
+export { enforceSingleRole } from './enforce-single-role.js';

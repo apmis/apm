@@ -15,9 +15,11 @@ export async function syncRolePermissions(context: HookContext): Promise<HookCon
 
   const app = context.app;
 
-  const rolesCol = await app.get('mongoClient').db().collection('roles');
-  const assignmentsCol = await app.get('mongoClient').db().collection('roleAssignments');
-  const usersCol = await app.get('mongoClient').db().collection('users');
+  const client = await app.get('mongodbClient');
+  const db = client.db();
+  const rolesCol = db.collection('roles');
+  const assignmentsCol = db.collection('roleAssignments');
+  const usersCol = db.collection('users');
 
   // Determine which userId was affected
   const userId = getUserId(context);

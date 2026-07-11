@@ -6,7 +6,7 @@ import {
   setServerFields, softDeleteFilter, idempotency,
   protectExternal, writeAuditLog, publishByScope,
   validateQuery, validateData, syncRolePermissions,
-  populateGeography,
+  populateGeography, enforceSingleRole,
 } from './index.js';
 import { syncUserRoleOnCreate } from './sync-user-role-on-create.js';
 
@@ -257,6 +257,9 @@ export function registerHooks(app: Application) {
   // the affected user's effective permissions from their active roles.
   try {
     app.service('apm/role-assignments').hooks({
+      before: {
+        create: [enforceSingleRole],
+      },
       after: {
         create: [syncRolePermissions],
         patch: [syncRolePermissions],

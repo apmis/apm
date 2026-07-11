@@ -71,7 +71,15 @@ const NAV_MENU_SEED: Array<{
     label: "Administration",
     icon: "Shield",
     section: "admin",
-    requiredPermissions: ["users_read", "users_admin", "roles_read", "roles_write", "system_settings_read", "audit_logs_read", "*"],
+    requiredPermissions: [
+      "users_read",
+      "users_admin",
+      "roles_read",
+      "roles_write",
+      "system_settings_read",
+      "audit_logs_read",
+      "*",
+    ],
     displayOrder: 1,
     isGroup: true,
   },
@@ -126,7 +134,13 @@ const NAV_MENU_SEED: Array<{
     label: "Geopolitical Mgmt.",
     icon: "MapPinned",
     section: "geopolitical",
-    requiredPermissions: ["states_read", "lgas_read", "wards_read", "polling_units_read", "*"],
+    requiredPermissions: [
+      "states_read",
+      "lgas_read",
+      "wards_read",
+      "polling_units_read",
+      "*",
+    ],
     displayOrder: 2,
     isGroup: true,
   },
@@ -137,7 +151,13 @@ const NAV_MENU_SEED: Array<{
     icon: "Eye",
     section: "geo-overview",
     parentKey: "geopolitical",
-    requiredPermissions: ["states_read", "lgas_read", "wards_read", "polling_units_read", "*"],
+    requiredPermissions: [
+      "states_read",
+      "lgas_read",
+      "wards_read",
+      "polling_units_read",
+      "*",
+    ],
     displayOrder: 0,
     isGroup: false,
   },
@@ -159,7 +179,11 @@ const NAV_MENU_SEED: Array<{
     icon: "MapPinned",
     section: "geo-districts",
     parentKey: "geopolitical",
-    requiredPermissions: ["senatorial_districts_read", "senatorial_districts_write", "*"],
+    requiredPermissions: [
+      "senatorial_districts_read",
+      "senatorial_districts_write",
+      "*",
+    ],
     displayOrder: 2,
     isGroup: false,
   },
@@ -214,7 +238,12 @@ const NAV_MENU_SEED: Array<{
     label: "Intelligence",
     icon: "Brain",
     section: "intelligence",
-    requiredPermissions: ["polling_unit_intelligence_read", "ward_conversion_assessments_read", "stakeholders_read", "*"],
+    requiredPermissions: [
+      "polling_unit_intelligence_read",
+      "ward_conversion_assessments_read",
+      "stakeholders_read",
+      "*",
+    ],
     displayOrder: 3,
     isGroup: true,
   },
@@ -225,7 +254,11 @@ const NAV_MENU_SEED: Array<{
     icon: "Brain",
     section: "intelligence-pu",
     parentKey: "intelligence",
-    requiredPermissions: ["polling_unit_intelligence_read", "polling_unit_intelligence_write", "*"],
+    requiredPermissions: [
+      "polling_unit_intelligence_read",
+      "polling_unit_intelligence_write",
+      "*",
+    ],
     displayOrder: 0,
     isGroup: false,
   },
@@ -236,7 +269,11 @@ const NAV_MENU_SEED: Array<{
     icon: "GitBranch",
     section: "intelligence-wards",
     parentKey: "intelligence",
-    requiredPermissions: ["ward_conversion_assessments_read", "ward_conversion_assessments_write", "*"],
+    requiredPermissions: [
+      "ward_conversion_assessments_read",
+      "ward_conversion_assessments_write",
+      "*",
+    ],
     displayOrder: 1,
     isGroup: false,
   },
@@ -247,7 +284,12 @@ const NAV_MENU_SEED: Array<{
     icon: "Handshake",
     section: "intelligence-stakeholders",
     parentKey: "intelligence",
-    requiredPermissions: ["stakeholders_read", "stakeholders_write", "stakeholder_engagements_read", "*"],
+    requiredPermissions: [
+      "stakeholders_read",
+      "stakeholders_write",
+      "stakeholder_engagements_read",
+      "*",
+    ],
     displayOrder: 2,
     isGroup: false,
   },
@@ -258,7 +300,13 @@ const NAV_MENU_SEED: Array<{
     label: "Field Ops",
     icon: "PhoneCall",
     section: "field",
-    requiredPermissions: ["volunteers_read", "voter_contacts_read", "tasks_read", "canvassing_reports_read", "*"],
+    requiredPermissions: [
+      "volunteers_read",
+      "voter_contacts_read",
+      "tasks_read",
+      "canvassing_reports_read",
+      "*",
+    ],
     displayOrder: 4,
     isGroup: true,
   },
@@ -269,7 +317,12 @@ const NAV_MENU_SEED: Array<{
     icon: "BadgeHelp",
     section: "field-volunteers",
     parentKey: "field",
-    requiredPermissions: ["volunteers_read", "volunteers_write", "volunteer_assignments_read", "*"],
+    requiredPermissions: [
+      "volunteers_read",
+      "volunteers_write",
+      "volunteer_assignments_read",
+      "*",
+    ],
     displayOrder: 0,
     isGroup: false,
   },
@@ -302,7 +355,11 @@ const NAV_MENU_SEED: Array<{
     icon: "BarChart3",
     section: "field-reports",
     parentKey: "field",
-    requiredPermissions: ["canvassing_reports_read", "canvassing_reports_write", "*"],
+    requiredPermissions: [
+      "canvassing_reports_read",
+      "canvassing_reports_write",
+      "*",
+    ],
     displayOrder: 3,
     isGroup: false,
   },
@@ -313,7 +370,13 @@ const NAV_MENU_SEED: Array<{
     label: "Messaging",
     icon: "MessageCircle",
     section: "messaging",
-    requiredPermissions: ["content_items_read", "whatsapp_groups_read", "rapid_response_issues_read", "candidate_events_read", "*"],
+    requiredPermissions: [
+      "content_items_read",
+      "whatsapp_groups_read",
+      "rapid_response_issues_read",
+      "candidate_events_read",
+      "*",
+    ],
     displayOrder: 5,
     isGroup: true,
   },
@@ -346,7 +409,12 @@ const NAV_MENU_SEED: Array<{
     icon: "Radio",
     section: "messaging-rapid",
     parentKey: "messaging",
-    requiredPermissions: ["rapid_response_issues_read", "rapid_response_issues_write", "rapid_response_actions_read", "*"],
+    requiredPermissions: [
+      "rapid_response_issues_read",
+      "rapid_response_issues_write",
+      "rapid_response_actions_read",
+      "*",
+    ],
     displayOrder: 2,
     isGroup: false,
   },
@@ -357,7 +425,12 @@ const NAV_MENU_SEED: Array<{
     icon: "Calendar",
     section: "messaging-events",
     parentKey: "messaging",
-    requiredPermissions: ["candidate_events_read", "candidate_events_write", "event_participants_read", "*"],
+    requiredPermissions: [
+      "candidate_events_read",
+      "candidate_events_write",
+      "event_participants_read",
+      "*",
+    ],
     displayOrder: 3,
     isGroup: false,
   },
@@ -379,7 +452,12 @@ const NAV_MENU_SEED: Array<{
     icon: "Shield",
     section: "readiness-agents",
     parentKey: "readiness",
-    requiredPermissions: ["polling_unit_agents_read", "polling_unit_agents_write", "agent_assignments_read", "*"],
+    requiredPermissions: [
+      "polling_unit_agents_read",
+      "polling_unit_agents_write",
+      "agent_assignments_read",
+      "*",
+    ],
     displayOrder: 0,
     isGroup: false,
   },
@@ -390,7 +468,12 @@ const NAV_MENU_SEED: Array<{
     icon: "AlertTriangle",
     section: "readiness-incidents",
     parentKey: "readiness",
-    requiredPermissions: ["incidents_read", "incidents_write", "escalations_read", "*"],
+    requiredPermissions: [
+      "incidents_read",
+      "incidents_write",
+      "escalations_read",
+      "*",
+    ],
     displayOrder: 1,
     isGroup: false,
   },
@@ -401,7 +484,11 @@ const NAV_MENU_SEED: Array<{
     label: "Election Day",
     icon: "Vote",
     section: "election",
-    requiredPermissions: ["election_day_reports_read", "election_results_read", "*"],
+    requiredPermissions: [
+      "election_day_reports_read",
+      "election_results_read",
+      "*",
+    ],
     displayOrder: 7,
     isGroup: true,
   },
@@ -412,7 +499,11 @@ const NAV_MENU_SEED: Array<{
     icon: "Vote",
     section: "election-ops",
     parentKey: "election",
-    requiredPermissions: ["election_day_reports_read", "election_day_reports_write", "*"],
+    requiredPermissions: [
+      "election_day_reports_read",
+      "election_day_reports_write",
+      "*",
+    ],
     displayOrder: 0,
     isGroup: false,
   },
@@ -423,7 +514,12 @@ const NAV_MENU_SEED: Array<{
     icon: "Upload",
     section: "election-results",
     parentKey: "election",
-    requiredPermissions: ["election_results_read", "election_results_write", "result_verifications_read", "*"],
+    requiredPermissions: [
+      "election_results_read",
+      "election_results_write",
+      "result_verifications_read",
+      "*",
+    ],
     displayOrder: 1,
     isGroup: false,
   },
@@ -434,7 +530,12 @@ const NAV_MENU_SEED: Array<{
     icon: "Activity",
     section: "election-command",
     parentKey: "election",
-    requiredPermissions: ["election_results_read", "escalations_read", "incidents_read", "*"],
+    requiredPermissions: [
+      "election_results_read",
+      "escalations_read",
+      "incidents_read",
+      "*",
+    ],
     displayOrder: 2,
     isGroup: false,
   },
@@ -445,7 +546,12 @@ const NAV_MENU_SEED: Array<{
     label: "Post-Election",
     icon: "BarChart3",
     section: "post",
-    requiredPermissions: ["result_reconciliations_read", "generated_reports_read", "data_exports_read", "*"],
+    requiredPermissions: [
+      "result_reconciliations_read",
+      "generated_reports_read",
+      "data_exports_read",
+      "*",
+    ],
     displayOrder: 8,
     isGroup: true,
   },
@@ -456,7 +562,11 @@ const NAV_MENU_SEED: Array<{
     icon: "CheckSquare",
     section: "post-recon",
     parentKey: "post",
-    requiredPermissions: ["result_reconciliations_read", "result_reconciliations_write", "*"],
+    requiredPermissions: [
+      "result_reconciliations_read",
+      "result_reconciliations_write",
+      "*",
+    ],
     displayOrder: 0,
     isGroup: false,
   },
@@ -467,7 +577,11 @@ const NAV_MENU_SEED: Array<{
     icon: "BarChart3",
     section: "post-analytics",
     parentKey: "post",
-    requiredPermissions: ["generated_reports_read", "dashboard_snapshots_read", "*"],
+    requiredPermissions: [
+      "generated_reports_read",
+      "dashboard_snapshots_read",
+      "*",
+    ],
     displayOrder: 1,
     isGroup: false,
   },
@@ -508,7 +622,8 @@ async function seed() {
       {
         code: "NATIONAL_ADMIN",
         name: "National Admin",
-        description: "Full system access across all modules and geographies. Can manage users, roles, permissions, and all operational data.",
+        description:
+          "Full system access across all modules and geographies. Can manage users, roles, permissions, and all operational data.",
         permissionCodes: NATIONAL_ADMIN_PERMISSIONS,
         isSystemRole: true,
         status: "active",
@@ -516,7 +631,8 @@ async function seed() {
       {
         code: "STATE_ADMIN",
         name: "State Admin",
-        description: "State-level administration with read/write access to most modules. Can manage users within their state scope.",
+        description:
+          "State-level administration with read/write access to most modules. Can manage users within their state scope.",
         permissionCodes: STATE_ADMIN_PERMISSIONS,
         isSystemRole: true,
         status: "active",
@@ -524,7 +640,8 @@ async function seed() {
       {
         code: "LGA_COORDINATOR",
         name: "LGA Coordinator",
-        description: "LGA-level coordination and field operations management. Manages volunteers, agents, and reporting within their LGA.",
+        description:
+          "LGA-level coordination and field operations management. Manages volunteers, agents, and reporting within their LGA.",
         permissionCodes: LGA_COORDINATOR_PERMISSIONS,
         isSystemRole: true,
         status: "active",
@@ -532,7 +649,8 @@ async function seed() {
       {
         code: "WARD_AGENT",
         name: "Ward Agent",
-        description: "Ward-level field operations and data collection. Can update polling unit intelligence and report incidents.",
+        description:
+          "Ward-level field operations and data collection. Can update polling unit intelligence and report incidents.",
         permissionCodes: WARD_AGENT_PERMISSIONS,
         isSystemRole: true,
         status: "active",
@@ -540,7 +658,8 @@ async function seed() {
       {
         code: "FIELD_AGENT",
         name: "Field Agent",
-        description: "Basic data collection and incident reporting at polling unit level. Minimal write access.",
+        description:
+          "Basic data collection and incident reporting at polling unit level. Minimal write access.",
         permissionCodes: FIELD_AGENT_PERMISSIONS,
         isSystemRole: true,
         status: "active",
@@ -548,7 +667,8 @@ async function seed() {
       {
         code: "VOLUNTEER",
         name: "Volunteer",
-        description: "Read-only access to assigned tasks. Limited to viewing and completing tasks.",
+        description:
+          "Read-only access to assigned tasks. Limited to viewing and completing tasks.",
         permissionCodes: ["tasks_read", "tasks_write", "notifications_read"],
         isSystemRole: true,
         status: "active",
@@ -595,9 +715,13 @@ async function seed() {
       twoFactorMethod: "none",
       ...base,
     });
-    console.log("Seeded default admin user: goodness.dare@lumenware.com.ng / password");
+    console.log(
+      "Seeded default admin user: goodness.dare@lumenware.com.ng / password",
+    );
 
-    const nationalAdminRole = await db.collection("roles").findOne({ code: "NATIONAL_ADMIN" });
+    const nationalAdminRole = await db
+      .collection("roles")
+      .findOne({ code: "NATIONAL_ADMIN" });
     if (nationalAdminRole) {
       await db.collection("roleAssignments").insertOne({
         userId: adminId.toString(),
@@ -679,11 +803,36 @@ async function seed() {
     { code: "ATS", name: "Atisbo", region: "Oyo", displayOrder: 3 },
     { code: "EGB", name: "Egbeda", region: "Oyo", displayOrder: 4 },
     { code: "IBN", name: "Ibadan North", region: "Ibadan", displayOrder: 5 },
-    { code: "INE", name: "Ibadan North-East", region: "Ibadan", displayOrder: 6 },
-    { code: "INW", name: "Ibadan North-West", region: "Ibadan", displayOrder: 7 },
-    { code: "ISE", name: "Ibadan South-East", region: "Ibadan", displayOrder: 8 },
-    { code: "ISW", name: "Ibadan South-West", region: "Ibadan", displayOrder: 9 },
-    { code: "IPC", name: "Ibarapa Central", region: "Ibarapa", displayOrder: 10 },
+    {
+      code: "INE",
+      name: "Ibadan North-East",
+      region: "Ibadan",
+      displayOrder: 6,
+    },
+    {
+      code: "INW",
+      name: "Ibadan North-West",
+      region: "Ibadan",
+      displayOrder: 7,
+    },
+    {
+      code: "ISE",
+      name: "Ibadan South-East",
+      region: "Ibadan",
+      displayOrder: 8,
+    },
+    {
+      code: "ISW",
+      name: "Ibadan South-West",
+      region: "Ibadan",
+      displayOrder: 9,
+    },
+    {
+      code: "IPC",
+      name: "Ibarapa Central",
+      region: "Ibarapa",
+      displayOrder: 10,
+    },
     { code: "IPE", name: "Ibarapa East", region: "Ibarapa", displayOrder: 11 },
     { code: "IPN", name: "Ibarapa North", region: "Ibarapa", displayOrder: 12 },
     { code: "IDO", name: "Ido", region: "Oyo", displayOrder: 13 },
@@ -693,8 +842,18 @@ async function seed() {
     { code: "IWA", name: "Iwajowa", region: "Oyo", displayOrder: 17 },
     { code: "KAJ", name: "Kajola", region: "Oyo", displayOrder: 18 },
     { code: "LAG", name: "Lagelu", region: "Oyo", displayOrder: 19 },
-    { code: "OGN", name: "Ogbomoso North", region: "Ogbomoso", displayOrder: 20 },
-    { code: "OGS", name: "Ogbomoso South", region: "Ogbomoso", displayOrder: 21 },
+    {
+      code: "OGN",
+      name: "Ogbomoso North",
+      region: "Ogbomoso",
+      displayOrder: 20,
+    },
+    {
+      code: "OGS",
+      name: "Ogbomoso South",
+      region: "Ogbomoso",
+      displayOrder: 21,
+    },
     { code: "OGO", name: "Ogo Oluwa", region: "Oyo", displayOrder: 22 },
     { code: "OLO", name: "Olorunsogo", region: "Oyo", displayOrder: 23 },
     { code: "OLU", name: "Oluyole", region: "Ibadan", displayOrder: 24 },
@@ -763,18 +922,38 @@ async function seed() {
 
   // --- Stakeholders ---
   const stakeDocs: any[] = [];
-  const stakeRoles = ["traditional", "religious", "political", "community", "youth", "women", "professional", "market"];
+  const stakeRoles = [
+    "traditional",
+    "religious",
+    "political",
+    "community",
+    "youth",
+    "women",
+    "professional",
+    "market",
+  ];
   const affiliations = ["PDP", "APC", "APM", "LP", "Other"];
-  const statuses = ["untouched", "engaged", "leaning", "won", "lost", "hostile"];
+  const statuses = [
+    "untouched",
+    "engaged",
+    "leaning",
+    "won",
+    "lost",
+    "hostile",
+  ];
   for (const lga of lgaRecords.slice(0, 6)) {
     for (let i = 0; i < 5; i++) {
       stakeDocs.push({
         fullName: `Stakeholder ${i + 1} - ${lga.name}`,
         phoneNumber: `080${String(Math.floor(Math.random() * 900000000) + 100000000)}`,
-        stakeholderType: stakeRoles[Math.floor(Math.random() * stakeRoles.length)],
+        stakeholderType:
+          stakeRoles[Math.floor(Math.random() * stakeRoles.length)],
         lgaId: lga._id.toString(),
-        affiliation: affiliations[Math.floor(Math.random() * affiliations.length)],
-        influenceLevel: ["high", "medium", "low"][Math.floor(Math.random() * 3)],
+        affiliation:
+          affiliations[Math.floor(Math.random() * affiliations.length)],
+        influenceLevel: ["high", "medium", "low"][
+          Math.floor(Math.random() * 3)
+        ],
         conversionStatus: statuses[Math.floor(Math.random() * statuses.length)],
         ...base,
       });
@@ -796,35 +975,122 @@ async function seed() {
 
   // --- WhatsApp Groups ---
   const waDocs = [
-    { level: "state", name: "APM Oyo State Command", description: "State-level coordination", memberCount: 15 },
-    { level: "senatorial", name: "APM Oyo Central", description: "Central coordination", memberCount: 25 },
-    { level: "senatorial", name: "APM Oyo North", description: "North coordination", memberCount: 25 },
-    { level: "senatorial", name: "APM Oyo South", description: "South coordination", memberCount: 25 },
+    {
+      level: "state",
+      name: "APM Oyo State Command",
+      description: "State-level coordination",
+      memberCount: 15,
+    },
+    {
+      level: "senatorial",
+      name: "APM Oyo Central",
+      description: "Central coordination",
+      memberCount: 25,
+    },
+    {
+      level: "senatorial",
+      name: "APM Oyo North",
+      description: "North coordination",
+      memberCount: 25,
+    },
+    {
+      level: "senatorial",
+      name: "APM Oyo South",
+      description: "South coordination",
+      memberCount: 25,
+    },
   ];
-  await db.collection("whatsappGroups").insertMany(waDocs.map((g) => ({ ...g, ...base })));
+  await db
+    .collection("whatsappGroups")
+    .insertMany(waDocs.map((g) => ({ ...g, ...base })));
   console.log(`Seeded ${waDocs.length} WhatsApp groups`);
 
   // --- Campaign Info ---
   const infoDocs = [
-    { key: "trust_banner", value: "Continuity with Competence", label: "Trust Banner", displayOrder: 0 },
-    { key: "hero_headline", value: "Building on Progress. Securing Our Future.", label: "Hero Headline", displayOrder: 1 },
-    { key: "hero_subheadline", value: "Bimbo Adekanmbi — Proven leadership to sustain and advance Oyo State's transformation.", label: "Hero Subheadline", displayOrder: 2 },
-    { key: "candidate_name", value: "Bimbo Adekanmbi", label: "Candidate Name", displayOrder: 3 },
-    { key: "candidate_tagline", value: "Your Choice for Continuous Transformation", label: "Candidate Tagline", displayOrder: 4 },
-    { key: "video_url", value: "https://www.youtube.com/watch?v=NGexChoo52g", label: "Campaign Video", displayOrder: 5 },
+    {
+      key: "trust_banner",
+      value: "Continuity with Competence",
+      label: "Trust Banner",
+      displayOrder: 0,
+    },
+    {
+      key: "hero_headline",
+      value: "Building on Progress. Securing Our Future.",
+      label: "Hero Headline",
+      displayOrder: 1,
+    },
+    {
+      key: "hero_subheadline",
+      value:
+        "Bimbo Adekanmbi — Proven leadership to sustain and advance Oyo State's transformation.",
+      label: "Hero Subheadline",
+      displayOrder: 2,
+    },
+    {
+      key: "candidate_name",
+      value: "Bimbo Adekanmbi",
+      label: "Candidate Name",
+      displayOrder: 3,
+    },
+    {
+      key: "candidate_tagline",
+      value: "Your Choice for Continuous Transformation",
+      label: "Candidate Tagline",
+      displayOrder: 4,
+    },
+    {
+      key: "video_url",
+      value: "https://www.youtube.com/watch?v=NGexChoo52g",
+      label: "Campaign Video",
+      displayOrder: 5,
+    },
   ];
-  await db.collection("campaignInfo").insertMany(infoDocs.map((d) => ({ ...d, ...base, isActive: true })));
+  await db
+    .collection("campaignInfo")
+    .insertMany(infoDocs.map((d) => ({ ...d, ...base, isActive: true })));
   console.log(`Seeded ${infoDocs.length} campaign info entries`);
 
   // --- Content Items ---
   const contentDocs = [
-    { title: "Economic Transformation", contentType: "achievement", body: "Strategic investments in agribusiness, infrastructure, and job creation.", status: "published", tags: ["economy"] },
-    { title: "Education Revolution", contentType: "achievement", body: "Over 500 schools rehabilitated across all 33 LGAs.", status: "published", tags: ["education"] },
-    { title: "Healthcare Access", contentType: "achievement", body: "Upgraded secondary health facilities across the state.", status: "published", tags: ["healthcare"] },
-    { title: "Continuity with Competence", contentType: "news", body: "Why Bimbo Adekanmbi believes continuity is the best strategy for Oyo State.", status: "published", tags: ["policy"] },
-    { title: "Grassroots Movement Grows", contentType: "news", body: "Over 10,000 volunteer registrations across all 33 LGAs.", status: "published", tags: ["campaign"] },
+    {
+      title: "Economic Transformation",
+      contentType: "achievement",
+      body: "Strategic investments in agribusiness, infrastructure, and job creation.",
+      status: "published",
+      tags: ["economy"],
+    },
+    {
+      title: "Education Revolution",
+      contentType: "achievement",
+      body: "Over 500 schools rehabilitated across all 33 LGAs.",
+      status: "published",
+      tags: ["education"],
+    },
+    {
+      title: "Healthcare Access",
+      contentType: "achievement",
+      body: "Upgraded secondary health facilities across the state.",
+      status: "published",
+      tags: ["healthcare"],
+    },
+    {
+      title: "Continuity with Competence",
+      contentType: "news",
+      body: "Why Bimbo Adekanmbi believes continuity is the best strategy for Oyo State.",
+      status: "published",
+      tags: ["policy"],
+    },
+    {
+      title: "Grassroots Movement Grows",
+      contentType: "news",
+      body: "Over 10,000 volunteer registrations across all 33 LGAs.",
+      status: "published",
+      tags: ["campaign"],
+    },
   ];
-  await db.collection("contentItems").insertMany(contentDocs.map((d) => ({ ...d, ...base })));
+  await db
+    .collection("contentItems")
+    .insertMany(contentDocs.map((d) => ({ ...d, ...base })));
   console.log(`Seeded ${contentDocs.length} content items`);
 
   // --- Polling Unit Agents ---
@@ -840,7 +1106,10 @@ async function seed() {
   await db.collection("pollingUnitAgents").insertMany(agentDocs);
   console.log(`Seeded ${agentDocs.length} polling unit agents`);
 
-  const agentRecords = await db.collection("pollingUnitAgents").find({}).toArray();
+  const agentRecords = await db
+    .collection("pollingUnitAgents")
+    .find({})
+    .toArray();
 
   // --- Agent Assignments ---
   const assignDocs = agentRecords.map((agent, i) => ({
@@ -857,17 +1126,60 @@ async function seed() {
 
   // --- Incidents ---
   const incidentDocs = [
-    { incidentType: "inecDelay", description: "Delayed arrival of election materials by 2 hours", severity: "low", immediateHelpRequired: false, legalEscalationNeeded: false, securityEscalationNeeded: false, status: "resolved" },
-    { incidentType: "intimidation", description: "Party thugs attempting to chase away voters at Ward 3", severity: "high", immediateHelpRequired: true, legalEscalationNeeded: false, securityEscalationNeeded: true, status: "new" },
-    { incidentType: "other", description: "Card reader malfunction at polling unit", severity: "medium", immediateHelpRequired: false, legalEscalationNeeded: false, securityEscalationNeeded: false, status: "acknowledged" },
-    { incidentType: "voteBuyingObservation", description: "Suspected vote buying near polling centre", severity: "critical", immediateHelpRequired: true, legalEscalationNeeded: true, securityEscalationNeeded: true, status: "new" },
-    { incidentType: "agentHarassment", description: "APM agent being prevented from observing counting", severity: "high", immediateHelpRequired: true, legalEscalationNeeded: true, securityEscalationNeeded: false, status: "new" },
+    {
+      incidentType: "inecDelay",
+      description: "Delayed arrival of election materials by 2 hours",
+      severity: "low",
+      immediateHelpRequired: false,
+      legalEscalationNeeded: false,
+      securityEscalationNeeded: false,
+      status: "resolved",
+    },
+    {
+      incidentType: "intimidation",
+      description: "Party thugs attempting to chase away voters at Ward 3",
+      severity: "high",
+      immediateHelpRequired: true,
+      legalEscalationNeeded: false,
+      securityEscalationNeeded: true,
+      status: "new",
+    },
+    {
+      incidentType: "other",
+      description: "Card reader malfunction at polling unit",
+      severity: "medium",
+      immediateHelpRequired: false,
+      legalEscalationNeeded: false,
+      securityEscalationNeeded: false,
+      status: "acknowledged",
+    },
+    {
+      incidentType: "voteBuyingObservation",
+      description: "Suspected vote buying near polling centre",
+      severity: "critical",
+      immediateHelpRequired: true,
+      legalEscalationNeeded: true,
+      securityEscalationNeeded: true,
+      status: "new",
+    },
+    {
+      incidentType: "agentHarassment",
+      description: "APM agent being prevented from observing counting",
+      severity: "high",
+      immediateHelpRequired: true,
+      legalEscalationNeeded: true,
+      securityEscalationNeeded: false,
+      status: "new",
+    },
   ];
   const firstPu = puRecords[0];
   await db.collection("incidents").insertMany(
     incidentDocs.map((d) => ({
       ...d,
-      geography: { pollingUnitId: firstPu._id.toString(), lgaId: firstPu.lgaId },
+      geography: {
+        pollingUnitId: firstPu._id.toString(),
+        lgaId: firstPu.lgaId,
+      },
       reportedBy: "seed-system",
       reportedAt: new Date(),
       ...base,
@@ -886,9 +1198,15 @@ async function seed() {
       clientSubmissionId: `seed-${pu._id}`,
       electionCode: "OYO-GOV-2027",
       pollingUnitId: pu._id.toString(),
-      geography: { pollingUnitId: pu._id.toString(), lgaId: pu.lgaId, wardId: pu.wardId },
+      geography: {
+        pollingUnitId: pu._id.toString(),
+        lgaId: pu.lgaId,
+        wardId: pu.wardId,
+      },
       registeredVoters: pu.registeredVoters,
-      accreditedVoters: Math.floor(pu.registeredVoters * (0.4 + Math.random() * 0.3)),
+      accreditedVoters: Math.floor(
+        pu.registeredVoters * (0.4 + Math.random() * 0.3),
+      ),
       partyResults: [
         { partyCode: "APM", partyName: "Accord", votes: apmVotes },
         { partyCode: "PDP", partyName: "PDP", votes: pdpVotes },
@@ -908,7 +1226,9 @@ async function seed() {
   console.log(`Seeded ${resultDocs.length} election results`);
 
   // --- Result Verifications ---
-  const verifiedResults = resultDocs.filter((r) => r.verificationStatus === "verified");
+  const verifiedResults = resultDocs.filter(
+    (r) => r.verificationStatus === "verified",
+  );
   const verifDocs = verifiedResults.map((r) => ({
     resultId: r.pollingUnitId,
     action: "verify",
@@ -930,10 +1250,20 @@ async function seed() {
     teamLead: NAMES[i % NAMES.length],
     teamSize: Math.floor(Math.random() * 5) + 2,
     status: Math.random() > 0.3 ? "completed" : "planned",
-    scheduledDate: new Date(Date.now() - Math.floor(Math.random() * 14 * 86400000)),
+    scheduledDate: new Date(
+      Date.now() - Math.floor(Math.random() * 14 * 86400000),
+    ),
     visitSummaries: [
-      { name: NAMES[(i + 1) % NAMES.length], supportLevel: "strong", outcome: "positive" },
-      { name: NAMES[(i + 2) % NAMES.length], supportLevel: "leaning", outcome: "neutral" },
+      {
+        name: NAMES[(i + 1) % NAMES.length],
+        supportLevel: "strong",
+        outcome: "positive",
+      },
+      {
+        name: NAMES[(i + 2) % NAMES.length],
+        supportLevel: "leaning",
+        outcome: "neutral",
+      },
     ],
     ...base,
   }));
@@ -944,8 +1274,12 @@ async function seed() {
   const volDocs = NAMES.slice(0, 15).map((name) => ({
     fullName: name,
     phoneNumber: `080${String(Math.floor(Math.random() * 900000000) + 100000000)}`,
-    skills: ["canvassing", "data-entry", "driving", "social-media"][Math.floor(Math.random() * 4)],
-    availability: ["weekdays", "weekends", "anytime"][Math.floor(Math.random() * 3)],
+    skills: ["canvassing", "data-entry", "driving", "social-media"][
+      Math.floor(Math.random() * 4)
+    ],
+    availability: ["weekdays", "weekends", "anytime"][
+      Math.floor(Math.random() * 3)
+    ],
     onboarded: Math.random() > 0.3,
     ...base,
   }));
@@ -954,31 +1288,109 @@ async function seed() {
 
   // --- Candidate Events ---
   const eventDocs = [
-    { title: "Oyo North Stakeholders Engagement", eventType: "stakeholderMeeting", geography: { lgaId: lgaRecords[20]._id.toString() }, description: "Town hall with traditional rulers", eventDate: new Date("2026-07-15"), expectedAttendees: 500, status: "planned" },
-    { title: "Youth Summit 2026", eventType: "rally", geography: { lgaId: lgaRecords[5]._id.toString() }, description: "Youth-focused event", eventDate: new Date("2026-08-01"), expectedAttendees: 1000, status: "planned" },
-    { title: "Women in Leadership Conference", eventType: "campaignEvent", geography: { lgaId: lgaRecords[5]._id.toString() }, description: "Women leaders engagement", eventDate: new Date("2026-08-20"), expectedAttendees: 300, status: "planned" },
+    {
+      title: "Oyo North Stakeholders Engagement",
+      eventType: "stakeholderMeeting",
+      geography: { lgaId: lgaRecords[20]._id.toString() },
+      description: "Town hall with traditional rulers",
+      eventDate: new Date("2026-07-15"),
+      expectedAttendees: 500,
+      status: "planned",
+    },
+    {
+      title: "Youth Summit 2026",
+      eventType: "rally",
+      geography: { lgaId: lgaRecords[5]._id.toString() },
+      description: "Youth-focused event",
+      eventDate: new Date("2026-08-01"),
+      expectedAttendees: 1000,
+      status: "planned",
+    },
+    {
+      title: "Women in Leadership Conference",
+      eventType: "campaignEvent",
+      geography: { lgaId: lgaRecords[5]._id.toString() },
+      description: "Women leaders engagement",
+      eventDate: new Date("2026-08-20"),
+      expectedAttendees: 300,
+      status: "planned",
+    },
   ];
-  await db.collection("candidateEvents").insertMany(eventDocs.map((d) => ({ ...d, ...base })));
+  await db
+    .collection("candidateEvents")
+    .insertMany(eventDocs.map((d) => ({ ...d, ...base })));
   console.log(`Seeded ${eventDocs.length} candidate events`);
 
   // --- System Settings ---
   const settingsDocs = [
-    { key: "campaign_name", environment: "development", value: "APM Oyo 2027", valueType: "string", category: "campaign", version: 1, isSensitive: false, status: "active", updatedBy: "seed-system" },
-    { key: "election_code", environment: "development", value: "OYO-GOV-2027", valueType: "string", category: "election", version: 1, isSensitive: false, status: "active", updatedBy: "seed-system" },
-    { key: "paginate_default", environment: "development", value: 20, valueType: "number", category: "system", version: 1, isSensitive: false, status: "active", updatedBy: "seed-system" },
+    {
+      key: "campaign_name",
+      environment: "development",
+      value: "APM Oyo 2027",
+      valueType: "string",
+      category: "campaign",
+      version: 1,
+      isSensitive: false,
+      status: "active",
+      updatedBy: "seed-system",
+    },
+    {
+      key: "election_code",
+      environment: "development",
+      value: "OYO-GOV-2027",
+      valueType: "string",
+      category: "election",
+      version: 1,
+      isSensitive: false,
+      status: "active",
+      updatedBy: "seed-system",
+    },
+    {
+      key: "paginate_default",
+      environment: "development",
+      value: 20,
+      valueType: "number",
+      category: "system",
+      version: 1,
+      isSensitive: false,
+      status: "active",
+      updatedBy: "seed-system",
+    },
   ];
-  await db.collection("systemSettings").insertMany(settingsDocs.map((d) => ({ ...d, ...base })));
+  await db
+    .collection("systemSettings")
+    .insertMany(settingsDocs.map((d) => ({ ...d, ...base })));
   console.log(`Seeded ${settingsDocs.length} system settings`);
 
   // --- Senatorial Districts ---
   const oyoStateForDist = await db.collection("states").findOne({ code: "OY" });
   const oyoStateIdForDist = oyoStateForDist?._id?.toString() || "";
   const distDocs = [
-    { code: "OYO-C", name: "Oyo Central", region: "Central", displayOrder: 0, stateId: oyoStateIdForDist },
-    { code: "OYO-N", name: "Oyo North", region: "North", displayOrder: 1, stateId: oyoStateIdForDist },
-    { code: "OYO-S", name: "Oyo South", region: "South", displayOrder: 2, stateId: oyoStateIdForDist },
+    {
+      code: "OYO-C",
+      name: "Oyo Central",
+      region: "Central",
+      displayOrder: 0,
+      stateId: oyoStateIdForDist,
+    },
+    {
+      code: "OYO-N",
+      name: "Oyo North",
+      region: "North",
+      displayOrder: 1,
+      stateId: oyoStateIdForDist,
+    },
+    {
+      code: "OYO-S",
+      name: "Oyo South",
+      region: "South",
+      displayOrder: 2,
+      stateId: oyoStateIdForDist,
+    },
   ];
-  await db.collection("senatorialDistricts").insertMany(distDocs.map((d) => ({ ...d, ...base })));
+  await db
+    .collection("senatorialDistricts")
+    .insertMany(distDocs.map((d) => ({ ...d, ...base })));
   console.log(`Seeded ${distDocs.length} senatorial districts`);
 
   await client.close();
