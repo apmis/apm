@@ -318,7 +318,7 @@ export class AuthService {
       };
     }
 
-    if (!user.totpSecret && user.totpEnabled !== false) {
+    if (!user.totpSecret) {
       const challengeToken = await createChallengeToken(user._id.toString());
       return {
         success: true,
