@@ -5,11 +5,11 @@ import { compare, hash } from "bcryptjs";
 import { generateSecret, generateURI, verifySync } from "otplib/functional";
 import { SignJWT, jwtVerify } from "jose";
 import QRCode from "qrcode";
-import * as crypto from "crypto";
 import { ObjectId } from "mongodb";
 import { getCollection } from "../../mongodb.js";
 import { sendEmail } from "../zeptomail.js";
 import { sendSms } from "../termii.js";
+import { generateOtp, storeOtp, verifyOtp, clearOtp } from "../otp.js";
 import { FIELD_AGENT_PERMISSIONS } from "../../permissions.js";
 
 const secretKey = new TextEncoder().encode(
@@ -197,12 +197,7 @@ export class AuthService {
     }
 
     if (user.email && !user.isEmailVerified) {
-      const otp = crypto.randomInt(100000, 999999).toString();
-      const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await collection.updateOne(
-        { _id: user._id },
-        { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
-      );
+      const otp = await storeOtp(collection, user._id, "email");
 
       await sendEmail({
         to: user.email,
@@ -234,12 +229,7 @@ export class AuthService {
     const phoneVerificationPending = !!data.email && !!(user.phoneNumber && !user.isPhoneVerified);
 
     if (data.phone && user.phoneNumber && !user.isPhoneVerified) {
-      const otp = crypto.randomInt(100000, 999999).toString();
-      const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      await collection.updateOne(
-        { _id: user._id },
-        { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
-      );
+      const otp = await storeOtp(collection, user._id, "phone");
 
       try {
         await sendSms(
@@ -266,12 +256,7 @@ export class AuthService {
       const method = user.twoFactorMethod || "totp";
 
       if (method === "email") {
-        const otp = crypto.randomInt(100000, 999999).toString();
-        const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        await collection.updateOne(
-          { _id: user._id },
-          { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
-        );
+        const otp = await storeOtp(collection, user._id, "email");
 
         await sendEmail({
           to: user.email,
@@ -292,12 +277,7 @@ export class AuthService {
       }
 
       if (method === "phone") {
-        const otp = crypto.randomInt(100000, 999999).toString();
-        const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        await collection.updateOne(
-          { _id: user._id },
-          { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
-        );
+        const otp = await storeOtp(collection, user._id, "phone");
 
         try {
           await sendSms(
@@ -350,8 +330,8 @@ export class AuthService {
     }
 
     const passwordHash = await hash(data.password, 12);
-    const emailOtp = crypto.randomInt(100000, 999999).toString();
-    const phoneOtp = crypto.randomInt(100000, 999999).toString();
+    const emailOtp = generateOtp();
+    const phoneOtp = generateOtp();
     const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     const userId = new ObjectId();
 
@@ -444,33 +424,17 @@ export class AuthService {
     let matchedDeviceId: string | null = null;
 
     if (method === "email") {
-      if (!user.emailOtpCode || !user.emailOtpExpiry) {
-        return {
-          success: false,
-          error: "No OTP was sent. Please request a new code.",
-        };
+      const result = verifyOtp(user, "email", data.code);
+      if (!result.valid) {
+        return { success: false, error: result.error };
       }
-      if (new Date() > new Date(user.emailOtpExpiry)) {
-        return {
-          success: false,
-          error: "OTP has expired. Please request a new code.",
-        };
-      }
-      isValid = user.emailOtpCode === data.code;
+      isValid = true;
     } else if (method === "phone") {
-      if (!user.phoneOtpCode || !user.phoneOtpExpiry) {
-        return {
-          success: false,
-          error: "No OTP was sent. Please request a new code.",
-        };
+      const result = verifyOtp(user, "phone", data.code);
+      if (!result.valid) {
+        return { success: false, error: result.error };
       }
-      if (new Date() > new Date(user.phoneOtpExpiry)) {
-        return {
-          success: false,
-          error: "OTP has expired. Please request a new code.",
-        };
-      }
-      isValid = user.phoneOtpCode === data.code;
+      isValid = true;
     } else {
       if (user.totpSecret && verifyTotpToken(data.code, user.totpSecret)) {
         isValid = true;
@@ -529,17 +493,10 @@ export class AuthService {
     const method = data.type || "totp";
 
     if (method === "email") {
-      const otp = crypto.randomInt(100000, 999999).toString();
-      const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const otp = await storeOtp(collection, user._id, "email");
       await collection.updateOne(
         { _id: user._id },
-        {
-          $set: {
-            emailOtpCode: otp,
-            emailOtpExpiry: expiry,
-            twoFactorMethod: "email",
-          },
-        },
+        { $set: { twoFactorMethod: "email" } },
       );
 
       await sendEmail({
@@ -563,17 +520,10 @@ export class AuthService {
     }
 
     if (method === "phone") {
-      const otp = crypto.randomInt(100000, 999999).toString();
-      const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const otp = await storeOtp(collection, user._id, "phone");
       await collection.updateOne(
         { _id: user._id },
-        {
-          $set: {
-            phoneOtpCode: otp,
-            phoneOtpExpiry: expiry,
-            twoFactorMethod: "phone",
-          },
-        },
+        { $set: { twoFactorMethod: "phone" } },
       );
 
       try {
@@ -616,30 +566,14 @@ export class AuthService {
     const method = user.twoFactorMethod || "totp";
 
     if (method === "email") {
-      if (!user.emailOtpCode || !user.emailOtpExpiry) {
-        return {
-          success: false,
-          error: "No pending 2FA setup. Start setup first.",
-        };
-      }
-      if (new Date() > new Date(user.emailOtpExpiry)) {
-        return { success: false, error: "OTP has expired. Start setup again." };
-      }
-      if (user.emailOtpCode !== data.code) {
-        return { success: false, error: "Invalid verification code" };
+      const result = verifyOtp(user, "email", data.code);
+      if (!result.valid) {
+        return { success: false, error: result.error };
       }
     } else if (method === "phone") {
-      if (!user.phoneOtpCode || !user.phoneOtpExpiry) {
-        return {
-          success: false,
-          error: "No pending 2FA setup. Start setup first.",
-        };
-      }
-      if (new Date() > new Date(user.phoneOtpExpiry)) {
-        return { success: false, error: "OTP has expired. Start setup again." };
-      }
-      if (user.phoneOtpCode !== data.code) {
-        return { success: false, error: "Invalid verification code" };
+      const result = verifyOtp(user, "phone", data.code);
+      if (!result.valid) {
+        return { success: false, error: result.error };
       }
     } else {
       if (!user.totpSecret) {
@@ -811,12 +745,7 @@ export class AuthService {
     if (!user) return { success: true };
     if (user.isEmailVerified) return { success: true };
 
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    await collection.updateOne(
-      { _id: user._id },
-      { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
-    );
+    const otp = await storeOtp(collection, user._id, "email");
 
     await sendEmail({
       to: user.email,
@@ -845,25 +774,16 @@ export class AuthService {
     });
     if (!user) return { success: false, error: "User not found" };
     if (user.isEmailVerified) return { success: true };
-    if (!user.emailOtpCode || !user.emailOtpExpiry) {
-      return { success: false, error: "No verification code was sent" };
-    }
-    if (new Date() > new Date(user.emailOtpExpiry)) {
-      return { success: false, error: "Verification code has expired" };
-    }
-    if (user.emailOtpCode !== data.code) {
-      return { success: false, error: "Invalid verification code" };
+
+    const result = verifyOtp(user, "email", data.code);
+    if (!result.valid) {
+      return { success: false, error: result.error };
     }
 
+    await clearOtp(collection, user._id, "email");
     await collection.updateOne(
       { _id: user._id },
-      {
-        $set: {
-          isEmailVerified: true,
-          emailOtpCode: null,
-          emailOtpExpiry: null,
-        },
-      },
+      { $set: { isEmailVerified: true } },
     );
 
     return { success: true };
@@ -878,12 +798,7 @@ export class AuthService {
     if (!user) return { success: true };
     if (user.isPhoneVerified) return { success: true };
 
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    await collection.updateOne(
-      { _id: user._id },
-      { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
-    );
+    const otp = await storeOtp(collection, user._id, "phone");
 
     try {
       await sendSms(
@@ -905,25 +820,16 @@ export class AuthService {
     });
     if (!user) return { success: false, error: "User not found" };
     if (user.isPhoneVerified) return { success: true };
-    if (!user.phoneOtpCode || !user.phoneOtpExpiry) {
-      return { success: false, error: "No verification code was sent" };
-    }
-    if (new Date() > new Date(user.phoneOtpExpiry)) {
-      return { success: false, error: "Verification code has expired" };
-    }
-    if (user.phoneOtpCode !== data.code) {
-      return { success: false, error: "Invalid verification code" };
+
+    const result = verifyOtp(user, "phone", data.code);
+    if (!result.valid) {
+      return { success: false, error: result.error };
     }
 
+    await clearOtp(collection, user._id, "phone");
     await collection.updateOne(
       { _id: user._id },
-      {
-        $set: {
-          isPhoneVerified: true,
-          phoneOtpCode: null,
-          phoneOtpExpiry: null,
-        },
-      },
+      { $set: { isPhoneVerified: true } },
     );
 
     return { success: true };
@@ -942,12 +848,7 @@ export class AuthService {
       };
     }
 
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    await collection.updateOne(
-      { _id: user._id },
-      { $set: { emailOtpCode: otp, emailOtpExpiry: expiry } },
-    );
+    const otp = await storeOtp(collection, user._id, "email");
 
     await sendEmail({
       to: user.email,
@@ -979,12 +880,7 @@ export class AuthService {
       return { success: false, error: "No phone number on this account" };
     }
 
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    await collection.updateOne(
-      { _id: user._id },
-      { $set: { phoneOtpCode: otp, phoneOtpExpiry: expiry } },
-    );
+    const otp = await storeOtp(collection, user._id, "phone");
 
     try {
       await sendSms(
