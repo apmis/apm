@@ -101,6 +101,11 @@ export const AuthResendOtpSchema = Type.Object({
   challengeToken: Type.String(),
 });
 
+export const AuthChangePasswordSchema = Type.Object({
+  currentPassword: Type.String(),
+  newPassword: Type.String({ minLength: 8 }),
+});
+
 export const AuthRegisterSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
   email: Type.String(),
@@ -158,6 +163,8 @@ export class AuthService {
         return this.forgotPassword(data);
       case "resetPassword":
         return this.resetPassword(data);
+      case "changePassword":
+        return this.changePassword(data, params);
       default:
         throw new BadRequest(`Unknown auth method: ${method}`);
     }
@@ -963,6 +970,30 @@ export class AuthService {
     } catch {
       return { success: false, error: "Invalid or expired reset link" };
     }
+  }
+
+  async changePassword(data: Static<typeof AuthChangePasswordSchema>, params?: Params) {
+    const userId = this.getUserId(params);
+    if (!userId) return { success: false, error: "Not authenticated" };
+
+    const collection = await getCollection(this.app, "users");
+    const user = await collection.findOne({ _id: new ObjectId(userId) });
+    if (!user || !user.password) return { success: false, error: "User not found" };
+
+    const isValid = await compare(data.currentPassword, user.password);
+    if (!isValid) return { success: false, error: "Current password is incorrect" };
+
+    if (data.currentPassword === data.newPassword) {
+      return { success: false, error: "New password must be different from current password" };
+    }
+
+    const passwordHash = await hash(data.newPassword, 12);
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { password: passwordHash, updatedAt: new Date().toISOString() } },
+    );
+
+    return { success: true };
   }
 
   // ─── Helpers ───

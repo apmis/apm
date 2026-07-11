@@ -59,6 +59,11 @@ const serverUrl = isProduction
       app.set(key, value);
     }
   }
+
+  // Use AUTH_SECRET env var for FeathersJS JWT signing if provided
+  if (process.env.AUTH_SECRET) {
+    app.set('authentication.secret', process.env.AUTH_SECRET);
+  }
   app.use(errorHandler());
   app.use(serveStatic(app.get('public') as string));
   app.use(bodyParser());

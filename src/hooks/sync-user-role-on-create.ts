@@ -21,7 +21,8 @@ export async function syncUserRoleOnCreate(context: HookContext): Promise<HookCo
   const userIdStr = userId.toString();
 
   const app = context.app;
-  const db = app.get('mongoClient').db();
+  const client = await app.get('mongodbClient');
+  const db = client.db();
   const rolesCol = db.collection('roles');
   const usersCol = db.collection('users');
   const assignmentsCol = db.collection('roleAssignments');
