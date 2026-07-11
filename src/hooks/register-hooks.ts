@@ -74,7 +74,18 @@ type ServiceConfig = {
 };
 
 const ADMIN_PERMS = ['*', 'apm_admin'];
-const AUTH_ADMIN = [authenticate('jwt'), authorizePermission(...ADMIN_PERMS)];
+
+/**
+ * Derive the read/write permission codes for a service path.
+ * Convention: apm/<module> → <module_with_underscores>_read / _write
+ */
+function derivePermissions(servicePath: string): { read: string[]; write: string[] } {
+  const module = servicePath.replace(/^apm\//, '').replace(/-/g, '_');
+  return {
+    read: [`${module}_read`, ...ADMIN_PERMS],
+    write: [`${module}_write`, ...ADMIN_PERMS],
+  };
+}
 
 export function registerHooks(app: Application) {
   const services: ServiceConfig[] = [
@@ -90,7 +101,7 @@ export function registerHooks(app: Application) {
     { path: 'apm/wards', querySchema: WardsQuerySchema, dataSchema: WardsDataSchema, patchSchema: WardsPatchSchema, publicRead: true },
     { path: 'apm/polling-units', querySchema: PollingUnitsQuerySchema, dataSchema: PollingUnitsDataSchema, patchSchema: PollingUnitsPatchSchema, publicRead: true },
     { path: 'apm/polling-unit-intelligence', querySchema: PollingUnitIntelligenceQuerySchema, dataSchema: PollingUnitIntelligenceDataSchema, patchSchema: PollingUnitIntelligencePatchSchema },
-    { path: 'apm/polling-unit-intelligence-history', querySchema: PollingUnitIntelligenceHistoryQuerySchema, dataSchema: PollingUnitIntelligenceHistoryDataSchema, patchSchema: PollingUnitIntelligenceHistoryPatchSchema },
+    { path: 'apm/polling-unit-intelligence-history', querySchema: PollingUnitIntelligenceHistoryQuerySchema, dataSchema: PollingUnitIntelligenceHistoryDataSchema, patchSchema: PollingUnitIntelligenceHistoryPatchSchema, authenticatedRead: true },
     { path: 'apm/ward-conversion-assessments', querySchema: WardConversionAssessmentsQuerySchema, dataSchema: WardConversionAssessmentsDataSchema, patchSchema: WardConversionAssessmentsPatchSchema },
     { path: 'apm/stakeholders', querySchema: StakeholdersQuerySchema, dataSchema: StakeholdersDataSchema, patchSchema: StakeholdersPatchSchema },
     { path: 'apm/stakeholder-engagements', querySchema: StakeholderEngagementsQuerySchema, dataSchema: StakeholderEngagementsDataSchema, patchSchema: StakeholderEngagementsPatchSchema },
@@ -166,8 +177,9 @@ export function registerHooks(app: Application) {
   } catch { /* ignore if auth service not yet available */ }
 
   for (const svc of services) {
-    const readAuth = svc.publicRead ? [] : svc.authenticatedRead ? [authenticate('jwt')] : AUTH_ADMIN;
-    const writeAuth = AUTH_ADMIN;
+    const perms = derivePermissions(svc.path);
+    const readAuth = svc.publicRead ? [] : svc.authenticatedRead ? [authenticate('jwt')] : [authenticate('jwt'), authorizePermission(...perms.read)];
+    const writeAuth = [authenticate('jwt'), authorizePermission(...perms.write)];
 
     const userHooks = svc.path === 'apm/users'
       ? [hashPassword('password', { strategy: 'local' })]
