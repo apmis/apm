@@ -54,6 +54,7 @@ import { DashboardSnapshotsService, getOptions as DashboardSnapshotsOptions } fr
 import { AuditLogsService, getOptions as AuditLogsOptions } from './audit-logs/audit-logs.js';
 import { DataExportsService, getOptions as DataExportsOptions } from './data-exports/data-exports.js';
 import { SystemSettingsService, getOptions as SystemSettingsOptions } from './system-settings/system-settings.js';
+import { NavMenusService, getOptions as NavMenusOptions } from './nav-menus/nav-menus.js';
 
 import * as Users from './users/users.js';
 import * as Roles from './roles/roles.js';
@@ -104,6 +105,7 @@ import * as DashboardSnapshots from './dashboard-snapshots/dashboard-snapshots.j
 import * as AuditLogs from './audit-logs/audit-logs.js';
 import * as DataExports from './data-exports/data-exports.js';
 import * as SystemSettings from './system-settings/system-settings.js';
+import * as NavMenus from './nav-menus/nav-menus.js';
 import * as States from './states/states.js';
 import * as VoterContacts from './voter-contacts/voter-contacts.js';
 import * as Auth from './auth/auth.js';
@@ -256,4 +258,5 @@ export function registerServices(app: Application) {
   app.use('/apm/audit-logs', new AuditLogsService(AuditLogsOptions(app)));
   app.use('/apm/data-exports', new DataExportsService(DataExportsOptions(app)));
   app.use('/apm/system-settings', new SystemSettingsService(SystemSettingsOptions(app)));
+  app.use('/apm/nav-menus', new NavMenusService(NavMenusOptions(app)));
 }
