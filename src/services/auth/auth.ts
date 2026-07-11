@@ -231,7 +231,9 @@ export class AuthService {
       };
     }
 
-    if (user.phoneNumber && !user.isPhoneVerified) {
+    const phoneVerificationPending = !!data.email && !!(user.phoneNumber && !user.isPhoneVerified);
+
+    if (data.phone && user.phoneNumber && !user.isPhoneVerified) {
       const otp = crypto.randomInt(100000, 999999).toString();
       const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await collection.updateOne(
@@ -328,7 +330,12 @@ export class AuthService {
     }
 
     const accessToken = await this.createAccessToken(user);
-    return { success: true, accessToken, userId: user._id.toString() };
+    return {
+      success: true,
+      accessToken,
+      userId: user._id.toString(),
+      ...(phoneVerificationPending ? { phoneVerificationPending: true, phone: user.phoneNumber } : {}),
+    };
   }
 
   // ─── Register ───
