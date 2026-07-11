@@ -82,10 +82,10 @@ export class ElectionResultsService extends MongoDBService<ElectionResults, Elec
     const method = params?.route?.__method;
     const id = params?.route?.id;
     if (method) (params as any).__customMethod = true;
-    if (method === 'verifyResult') return this.verifyResult(id, params);
-    if (method === 'rejectResult') return this.rejectResult(id, data || {}, params);
-    if (method === 'getDashboard') return this.getDashboard(params);
-    if (method === 'reconcile') return this.reconcile(params);
+    if (method === 'verifyResult') return (this as any).verifyResult(id, params);
+    if (method === 'rejectResult') return (this as any).rejectResult(id, data || {}, params);
+    if (method === 'getDashboard') return (this as any).getDashboard(params);
+    if (method === 'reconcile') return (this as any).reconcile(params);
     return super.create(data, params);
   }
 

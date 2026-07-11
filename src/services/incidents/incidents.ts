@@ -66,8 +66,8 @@ export class IncidentsService extends MongoDBService<Incidents, IncidentsData> {
     const method = params?.route?.__method;
     const id = params?.route?.id;
     if (method && method !== 'escalate') (params as any).__customMethod = true;
-    if (method === 'escalate') return this.escalate(id, data, params);
-    if (method === 'getSummary') return this.getSummary(params);
+    if (method === 'escalate') return (this as any).escalate(id, data, params);
+    if (method === 'getSummary') return (this as any).getSummary(params);
     return super.create(data, params);
   }
 

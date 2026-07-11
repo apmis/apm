@@ -57,8 +57,8 @@ export class CanvassingReportsService extends MongoDBService<CanvassingReports, 
   async create(data: any, params?: Params): Promise<any> {
     const method = params?.route?.__method;
     if (method) (params as any).__customMethod = true;
-    if (method === 'getSummary') return this.getSummary(params);
-    if (method === 'getLgaStats') return this.getLgaStats(params);
+    if (method === 'getSummary') return (this as any).getSummary(params);
+    if (method === 'getLgaStats') return (this as any).getLgaStats(params);
     return super.create(data, params);
   }
 

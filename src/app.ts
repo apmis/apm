@@ -24,10 +24,10 @@ const serverUrl = isProduction
   : `http://localhost:${app.get('port')}`;
 
   // Register argument mapping for custom REST methods
-  http.argumentsFor.setupPermissions = ({ id, data, params }: any) => [id, data, params];
+  (http.argumentsFor as any).setupPermissions = ({ id, data, params }: any) => [id, data, params];
 
   app.use(async (ctx, next) => {
-    ctx.feathers = { ...ctx.feathers, app: ctx.app };
+    ctx.feathers = { ...ctx.feathers, app: ctx.app } as any;
     const path = ctx.request.path;
     const match = path.match(/^(\/apm\/\w+)\/([^/]+)\/(\w+)$/);
     if (match) {
@@ -40,7 +40,7 @@ const serverUrl = isProduction
     }
   });
 
-  const allowedOrigins = ['http://localhost:3000', 'https://your-frontend-domain.com', 'https://campaign-app-delta.vercel.app'];
+  const allowedOrigins = ['http://localhost:3000', 'https://adeoyo.campaign.africa', 'https://campaign-app-delta.vercel.app'];
   const corsOptions = {
     origin: (ctx: any) => {
       const requestOrigin = ctx.get('Origin');
