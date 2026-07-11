@@ -8,6 +8,7 @@ import {
   validateQuery, validateData, syncRolePermissions,
   populateGeography,
 } from './index.js';
+import { syncUserRoleOnCreate } from './sync-user-role-on-create.js';
 
 const { hashPassword } = authLocalHooks;
 
@@ -185,6 +186,10 @@ export function registerHooks(app: Application) {
       ? [hashPassword('password', { strategy: 'local' })]
       : [];
 
+    const userAfterCreate = svc.path === 'apm/users'
+      ? [syncUserRoleOnCreate]
+      : [];
+
     const createHooks = svc.idempotent
       ? [...writeAuth, idempotency(), validateData(svc.dataSchema), ...userHooks, setServerFields()]
       : [...writeAuth, validateData(svc.dataSchema), ...userHooks, setServerFields()];
@@ -236,6 +241,7 @@ export function registerHooks(app: Application) {
       },
       after: {
         all: afterAll,
+        create: userAfterCreate,
         ...geoPopulate,
       },
       error: {

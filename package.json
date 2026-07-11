@@ -9,6 +9,7 @@
     "build": "tsc",
     "test": "vitest run",
     "seed": "tsx src/seed/seed.ts",
+    "migrate": "tsx src/migrations/20260711-sync-field-agent-permissions.ts",
     "generate-services": "tsx src/generate-services.ts"
   },
   "dependencies": {
