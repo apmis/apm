@@ -45,6 +45,9 @@ import { EventReportsResultSchema, EventReportsDataSchema, EventReportsPatchSche
 import { EventCommitmentsResultSchema, EventCommitmentsDataSchema, EventCommitmentsPatchSchema, EventCommitmentsQuerySchema } from '../services/event-commitments/event-commitments.js';
 import { PollingUnitAgentsResultSchema, PollingUnitAgentsDataSchema, PollingUnitAgentsPatchSchema, PollingUnitAgentsQuerySchema } from '../services/polling-unit-agents/polling-unit-agents.js';
 import { AgentAssignmentsResultSchema, AgentAssignmentsDataSchema, AgentAssignmentsPatchSchema, AgentAssignmentsQuerySchema } from '../services/agent-assignments/agent-assignments.js';
+import { LocalIssuesResultSchema, LocalIssuesDataSchema, LocalIssuesPatchSchema, LocalIssuesQuerySchema } from '../services/local-issues/local-issues.js';
+import { InfluencersResultSchema, InfluencersDataSchema, InfluencersPatchSchema, InfluencersQuerySchema } from '../services/influencers/influencers.js';
+import { CoordinatorsResultSchema, CoordinatorsDataSchema, CoordinatorsPatchSchema, CoordinatorsQuerySchema } from '../services/coordinators/coordinators.js';
 import { AgentTrainingRecordsResultSchema, AgentTrainingRecordsDataSchema, AgentTrainingRecordsPatchSchema, AgentTrainingRecordsQuerySchema } from '../services/agent-training-records/agent-training-records.js';
 import { AgentReadinessChecklistsResultSchema, AgentReadinessChecklistsDataSchema, AgentReadinessChecklistsPatchSchema, AgentReadinessChecklistsQuerySchema } from '../services/agent-readiness-checklists/agent-readiness-checklists.js';
 import { ElectionDayReportsResultSchema, ElectionDayReportsDataSchema, ElectionDayReportsPatchSchema, ElectionDayReportsQuerySchema } from '../services/election-day-reports/election-day-reports.js';
@@ -124,6 +127,9 @@ export function registerHooks(app: Application) {
     { path: 'apm/event-commitments', querySchema: EventCommitmentsQuerySchema, dataSchema: EventCommitmentsDataSchema, patchSchema: EventCommitmentsPatchSchema },
     { path: 'apm/polling-unit-agents', querySchema: PollingUnitAgentsQuerySchema, dataSchema: PollingUnitAgentsDataSchema, patchSchema: PollingUnitAgentsPatchSchema },
     { path: 'apm/agent-assignments', querySchema: AgentAssignmentsQuerySchema, dataSchema: AgentAssignmentsDataSchema, patchSchema: AgentAssignmentsPatchSchema },
+    { path: 'apm/local-issues', querySchema: LocalIssuesQuerySchema, dataSchema: LocalIssuesDataSchema, patchSchema: LocalIssuesPatchSchema },
+    { path: 'apm/influencers', querySchema: InfluencersQuerySchema, dataSchema: InfluencersDataSchema, patchSchema: InfluencersPatchSchema },
+    { path: 'apm/coordinators', querySchema: CoordinatorsQuerySchema, dataSchema: CoordinatorsDataSchema, patchSchema: CoordinatorsPatchSchema },
     { path: 'apm/agent-training-records', querySchema: AgentTrainingRecordsQuerySchema, dataSchema: AgentTrainingRecordsDataSchema, patchSchema: AgentTrainingRecordsPatchSchema },
     { path: 'apm/agent-readiness-checklists', querySchema: AgentReadinessChecklistsQuerySchema, dataSchema: AgentReadinessChecklistsDataSchema, patchSchema: AgentReadinessChecklistsPatchSchema },
     { path: 'apm/election-day-reports', querySchema: ElectionDayReportsQuerySchema, dataSchema: ElectionDayReportsDataSchema, patchSchema: ElectionDayReportsPatchSchema },

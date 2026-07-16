@@ -38,6 +38,9 @@ import { EventReportsService, getOptions as EventReportsOptions } from './event-
 import { EventCommitmentsService, getOptions as EventCommitmentsOptions } from './event-commitments/event-commitments.js';
 import { PollingUnitAgentsService, getOptions as PollingUnitAgentsOptions } from './polling-unit-agents/polling-unit-agents.js';
 import { AgentAssignmentsService, getOptions as AgentAssignmentsOptions } from './agent-assignments/agent-assignments.js';
+import { LocalIssuesService, getOptions as LocalIssuesOptions } from './local-issues/local-issues.js';
+import { InfluencersService, getOptions as InfluencersOptions } from './influencers/influencers.js';
+import { CoordinatorsService, getOptions as CoordinatorsOptions } from './coordinators/coordinators.js';
 import { AgentTrainingRecordsService, getOptions as AgentTrainingRecordsOptions } from './agent-training-records/agent-training-records.js';
 import { AgentReadinessChecklistsService, getOptions as AgentReadinessChecklistsOptions } from './agent-readiness-checklists/agent-readiness-checklists.js';
 import { ElectionDayReportsService, getOptions as ElectionDayReportsOptions } from './election-day-reports/election-day-reports.js';
@@ -242,6 +245,9 @@ export function registerServices(app: Application) {
   app.use('/apm/event-commitments', new EventCommitmentsService(EventCommitmentsOptions(app)));
   app.use('/apm/polling-unit-agents', new PollingUnitAgentsService(PollingUnitAgentsOptions(app)));
   app.use('/apm/agent-assignments', new AgentAssignmentsService(AgentAssignmentsOptions(app)));
+  app.use('/apm/local-issues', new LocalIssuesService(LocalIssuesOptions(app)));
+  app.use('/apm/influencers', new InfluencersService(InfluencersOptions(app)));
+  app.use('/apm/coordinators', new CoordinatorsService(CoordinatorsOptions(app)));
   app.use('/apm/agent-training-records', new AgentTrainingRecordsService(AgentTrainingRecordsOptions(app)));
   app.use('/apm/agent-readiness-checklists', new AgentReadinessChecklistsService(AgentReadinessChecklistsOptions(app)));
   app.use('/apm/election-day-reports', new ElectionDayReportsService(ElectionDayReportsOptions(app)));
