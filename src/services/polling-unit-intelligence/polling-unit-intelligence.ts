@@ -13,6 +13,14 @@ export const PollingUnitIntelligenceResultSchema = Type.Object({
   pastResultApm: Type.Optional(Type.Integer()),
   pastResultPdp: Type.Optional(Type.Integer()),
   pastResultApc: Type.Optional(Type.Integer()),
+  campaignReadiness: Type.Optional(Type.String()),
+  partyStrength: Type.Optional(Type.String()),
+  oppositionStrength: Type.Optional(Type.String()),
+  keyOpposition: Type.Optional(Type.String()),
+  influencerCount: Type.Optional(Type.Integer()),
+  localIssueCount: Type.Optional(Type.Integer()),
+  coordinator: Type.Optional(Type.String()),
+  updatedBy: Type.Optional(Type.String()),
   notes: Type.Optional(Type.String()),
 }, { additionalProperties: false });
 
@@ -23,6 +31,14 @@ export const PollingUnitIntelligenceDataSchema = Type.Object({
   pastResultApm: Type.Optional(Type.Integer()),
   pastResultPdp: Type.Optional(Type.Integer()),
   pastResultApc: Type.Optional(Type.Integer()),
+  campaignReadiness: Type.Optional(Type.String()),
+  partyStrength: Type.Optional(Type.String()),
+  oppositionStrength: Type.Optional(Type.String()),
+  keyOpposition: Type.Optional(Type.String()),
+  influencerCount: Type.Optional(Type.Integer()),
+  localIssueCount: Type.Optional(Type.Integer()),
+  coordinator: Type.Optional(Type.String()),
+  updatedBy: Type.Optional(Type.String()),
   notes: Type.Optional(Type.String()),
 }, { additionalProperties: false });
 
@@ -33,6 +49,14 @@ export const PollingUnitIntelligencePatchSchema = Type.Object({
   pastResultApm: Type.Optional(Type.Optional(Type.Integer())),
   pastResultPdp: Type.Optional(Type.Optional(Type.Integer())),
   pastResultApc: Type.Optional(Type.Optional(Type.Integer())),
+  campaignReadiness: Type.Optional(Type.Optional(Type.String())),
+  partyStrength: Type.Optional(Type.Optional(Type.String())),
+  oppositionStrength: Type.Optional(Type.Optional(Type.String())),
+  keyOpposition: Type.Optional(Type.Optional(Type.String())),
+  influencerCount: Type.Optional(Type.Optional(Type.Integer())),
+  localIssueCount: Type.Optional(Type.Optional(Type.Integer())),
+  coordinator: Type.Optional(Type.Optional(Type.String())),
+  updatedBy: Type.Optional(Type.Optional(Type.String())),
   notes: Type.Optional(Type.Optional(Type.String())),
 }, { additionalProperties: false });
 

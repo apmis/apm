@@ -122,6 +122,15 @@ export const AGENT_TRAINING_RECORDS_WRITE = 'agent_training_records_write';
 export const AGENT_READINESS_CHECKLISTS_READ  = 'agent_readiness_checklists_read';
 export const AGENT_READINESS_CHECKLISTS_WRITE = 'agent_readiness_checklists_write';
 
+export const LOCAL_ISSUES_READ  = 'local_issues_read';
+export const LOCAL_ISSUES_WRITE = 'local_issues_write';
+
+export const INFLUENCERS_READ  = 'influencers_read';
+export const INFLUENCERS_WRITE = 'influencers_write';
+
+export const COORDINATORS_READ  = 'coordinators_read';
+export const COORDINATORS_WRITE = 'coordinators_write';
+
 export const ELECTION_DAY_REPORTS_READ  = 'election_day_reports_read';
 export const ELECTION_DAY_REPORTS_WRITE = 'election_day_reports_write';
 
