@@ -945,16 +945,19 @@ async function seed() {
     for (let i = 0; i < 5; i++) {
       stakeDocs.push({
         fullName: `Stakeholder ${i + 1} - ${lga.name}`,
-        phoneNumber: `080${String(Math.floor(Math.random() * 900000000) + 100000000)}`,
-        stakeholderType:
+        profileRole:
           stakeRoles[Math.floor(Math.random() * stakeRoles.length)],
+        phoneNumber: `080${String(Math.floor(Math.random() * 900000000) + 100000000)}`,
         lgaId: lga._id.toString(),
-        affiliation:
-          affiliations[Math.floor(Math.random() * affiliations.length)],
-        influenceLevel: ["high", "medium", "low"][
-          Math.floor(Math.random() * 3)
-        ],
-        conversionStatus: statuses[Math.floor(Math.random() * statuses.length)],
+        bank: affiliations[Math.floor(Math.random() * affiliations.length)],
+        accountNumber: String(Math.floor(Math.random() * 1000000000) + 100000000),
+        description: "Seeded stakeholder description.",
+        commitments: "Seeded stakeholder commitments.",
+        trackerStatus: statuses[Math.floor(Math.random() * statuses.length)],
+        trackerPercentage: Math.floor(Math.random() * 100),
+        riskScore: Math.floor(Math.random() * 10) + 1,
+        influenceScore: Math.floor(Math.random() * 10) + 1,
+        alignmentScore: Math.floor(Math.random() * 10) + 1,
         ...base,
       });
     }
